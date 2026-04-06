@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A self-hosted web app for diagnosing Plex library issues. It compares Plex movie durations against Radarr's expected runtimes and flags movies that appear to be incomplete downloads. Users can trigger redownloads through Radarr directly from the UI.
+A self-hosted web app for diagnosing and fixing Plex library issues. It integrates with Plex and Radarr to provide three diagnostic tools: movie duration checking (flags incomplete downloads), video quality checking (flags movies below a resolution threshold), and unmanaged movie detection (Plex movies missing from Radarr). Users can trigger Radarr redownloads directly from the UI.
 
 **Stack:**
 - **Backend:** Node.js + Express, SQLite via `better-sqlite3`, Axios for Plex/Radarr API calls
@@ -20,9 +20,12 @@ backend/
     routes/
       settings.js     # GET/POST /api/settings
       movies.js       # GET /api/movies/check, POST /api/movies/redownload, cache routes
+      plex.js         # GET /api/plex/libraries
+      quality.js      # GET /api/quality/check
+      coverage.js     # GET /api/coverage/check
     api/
-      plex.js         # Plex HTTP API client
-      radarr.js       # Radarr HTTP API client
+      plex.js         # Plex HTTP API client — fetchPlexMovies, fetchPlexLibraries
+      radarr.js       # Radarr HTTP API client — fetchRadarrMovies
     db/
       index.js        # SQLite schema, migrations, settings CRUD, Radarr runtime cache
   data/               # SQLite DB lives here in dev (gitignored)
@@ -36,9 +39,13 @@ frontend/
       DashboardView.vue
       SettingsView.vue
       MovieDurationView.vue
+      MovieQualityView.vue
+      CoverageView.vue
     stores/
       settings.js     # Pinia store — fetchSettings (silent failure), saveSettings (throws on error)
       movieDuration.js
+      movieQuality.js
+      coverage.js
     api/
       client.js       # fetch wrapper — checks Content-Type before .json(), throws on !res.ok
   vite.config.js      # Dev proxy: /api → http://127.0.0.1:3000 (must use 127.0.0.1, not localhost)
@@ -89,6 +96,9 @@ The Dockerfile is a multi-stage build: Vite builds the frontend, then the output
 | POST | `/api/movies/redownload` | Deletes Radarr movie files and triggers a new search `{ movieIds: number[] }` |
 | POST | `/api/movies/refresh-cache` | Clears the Radarr runtime cache |
 | GET | `/api/movies/cache-stats` | Returns SQLite cache stats |
+| GET | `/api/plex/libraries` | Returns Plex library sections using saved credentials |
+| GET | `/api/quality/check` | Runs the video quality check; compares resolution against per-library thresholds |
+| GET | `/api/coverage/check` | Runs the unmanaged movies check; cross-references Plex TMDB IDs against Radarr |
 | GET | `/api/health` | Health check — returns `{ status: "ok" }` |
 
 ---
@@ -122,3 +132,4 @@ The Dockerfile is a multi-stage build: Vite builds the frontend, then the output
 2. **Pinia store:** Create `frontend/src/stores/<feature>.js` following the pattern in `settings.js` or `movieDuration.js`.
 3. **View:** Add a Vue SFC in `frontend/src/views/`, register it in `frontend/src/router/index.js`, and add a card to `DashboardView.vue`.
 4. Use `useToast()` for success/error feedback — do not use inline `<Message>` banners for transient state.
+5. **Update `README.md`** — add a section describing the new feature, how to use it, and any relevant settings. Keep the features list at the top of the README current.

@@ -4,6 +4,8 @@ A web app for diagnosing and fixing issues with your Plex media library.
 
 **Current features:**
 - 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable tolerance.
+- 🎥 **Video Quality Check** — flags movies below a configurable minimum resolution threshold, with per-library settings.
+- 🔍 **Unmanaged Movies** — finds movies in Plex that have no matching entry in Radarr, so they won't receive quality upgrades or monitoring.
 
 ## Requirements
 
@@ -14,7 +16,7 @@ A web app for diagnosing and fixing issues with your Plex media library.
 ## Quick Start
 
 ```bash
-git clone <repo-url> plex-issue-finder
+git clone https://github.com/cbulock/plex-issue-finder
 cd plex-issue-finder
 docker-compose up -d
 ```
@@ -66,10 +68,27 @@ The frontend dev server proxies `/api/*` to `http://localhost:3000`, so run both
 ## Movie Duration Check
 
 1. Configure Plex and Radarr URLs + credentials in **Settings**.
-2. Set your preferred leeway percentage (default: **5%**).
-3. Navigate to **Movie Duration Check** and click **Run Check**.
-4. Movies where `|actual − expected| / expected > leeway%` are flagged.
-5. Radarr runtimes are cached in SQLite. Use **Force Refresh Cache** to re-fetch.
+2. Optionally select which Plex libraries to scan under **Plex Libraries** in Settings.
+3. Set your preferred leeway percentage (default: **5%**).
+4. Navigate to **Movie Duration Check** and click **Run Check**.
+5. Movies where `|actual − expected| / expected > leeway%` are flagged.
+6. Radarr runtimes are cached in SQLite. Use **Force Refresh Cache** to re-fetch.
+7. Select flagged movies and click **Redownload** to delete the existing file in Radarr and trigger a new automatic search.
+
+## Video Quality Check
+
+1. Configure Plex and Radarr URLs + credentials in **Settings**.
+2. Under **Plex Libraries** in Settings, select the libraries to scan and set a minimum resolution threshold per library (default: **1080p**).
+3. Navigate to **Video Quality Check** and click **Run Check**.
+4. Movies below their library's resolution threshold are flagged, showing resolution, codec, and audio details.
+5. Select flagged movies and click **Redownload** to trigger a Radarr quality upgrade search.
+
+## Unmanaged Movies
+
+1. Configure Plex and Radarr URLs + credentials in **Settings**.
+2. Optionally select which Plex libraries to scan under **Plex Libraries** in Settings.
+3. Navigate to **Unmanaged Movies** and click **Run Check**.
+4. Movies present in Plex but with no matching TMDB entry in Radarr are listed. These movies won't receive automatic quality upgrades or monitoring.
 
 ## Data Storage
 
