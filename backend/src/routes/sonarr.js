@@ -66,8 +66,6 @@ router.get('/check', async (req, res) => {
         episodes = [];
       }
 
-      const unmonitoredSeasonNumbers = new Set(unmonitoredSeasons.map((s) => s.seasonNumber));
-
       // Also find individually unmonitored episodes in monitored seasons
       const monitoredSeasonNumbers = new Set(
         (series.seasons || [])
