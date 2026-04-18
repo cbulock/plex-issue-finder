@@ -155,6 +155,18 @@
                     <i :class="ep.hasFile ? 'pi pi-check' : 'pi pi-times'" :style="{ color: ep.hasFile ? '#44bd7d' : '#e57373' }" />
                   </template>
                 </Column>
+                <Column header="Link" style="width: 60px">
+                  <template #body>
+                    <a
+                      v-if="data.titleSlug && sonarrBaseUrl"
+                      :href="`${sonarrBaseUrl}/series/${data.titleSlug}`"
+                      target="_blank"
+                      rel="noopener"
+                      class="icon-link sonarr-link"
+                      data-tooltip="Open in Sonarr"
+                    ><i class="pi pi-external-link" /></a>
+                  </template>
+                </Column>
               </DataTable>
             </div>
           </div>
