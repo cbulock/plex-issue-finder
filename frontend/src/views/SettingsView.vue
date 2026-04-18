@@ -2,7 +2,7 @@
   <div class="settings-view">
     <div class="page-header">
       <h1>Settings</h1>
-      <p>Configure your Plex and Radarr connection details.</p>
+      <p>Configure your Plex, Radarr, and Sonarr connection details.</p>
     </div>
 
     <form @submit.prevent="handleSave" class="settings-form">
@@ -70,6 +70,35 @@
               class="w-full"
             />
             <small>Found in Radarr → Settings → General → Security</small>
+          </div>
+        </template>
+      </Card>
+
+      <Card class="settings-card">
+        <template #title>
+          <span><i class="pi pi-list" style="margin-right: 8px" />Sonarr</span>
+        </template>
+        <template #content>
+          <div class="field">
+            <label for="sonarr_url">Server URL</label>
+            <InputText
+              id="sonarr_url"
+              v-model="form.sonarr_url"
+              placeholder="http://192.168.1.x:8989"
+              class="w-full"
+            />
+          </div>
+          <div class="field">
+            <label for="sonarr_api_key">API Key</label>
+            <Password
+              id="sonarr_api_key"
+              v-model="form.sonarr_api_key"
+              :placeholder="store.settings.sonarr_api_key_set ? '(saved — enter to change)' : 'Your Sonarr API key'"
+              :feedback="false"
+              toggle-mask
+              class="w-full"
+            />
+            <small>Found in Sonarr → Settings → General → Security</small>
           </div>
         </template>
       </Card>
@@ -197,6 +226,8 @@ const form = ref({
   plex_token: '',
   radarr_url: '',
   radarr_api_key: '',
+  sonarr_url: '',
+  sonarr_api_key: '',
 })
 
 const leewayNum = ref(5)
@@ -212,6 +243,7 @@ onMounted(async () => {
   await store.fetchSettings()
   form.value.plex_url = store.settings.plex_url || ''
   form.value.radarr_url = store.settings.radarr_url || ''
+  form.value.sonarr_url = store.settings.sonarr_url || ''
   leewayNum.value = parseFloat(store.settings.leeway_percent) || 5
 
   // Restore saved library selection
@@ -250,17 +282,20 @@ async function handleSave() {
   const payload = {
     plex_url: form.value.plex_url,
     radarr_url: form.value.radarr_url,
+    sonarr_url: form.value.sonarr_url,
     leeway_percent: leewayNum.value,
     plex_library_ids: selectedLibraryIds.value.join(','),
     quality_thresholds: JSON.stringify(qualityThresholds),
   }
   if (form.value.plex_token) payload.plex_token = form.value.plex_token
   if (form.value.radarr_api_key) payload.radarr_api_key = form.value.radarr_api_key
+  if (form.value.sonarr_api_key) payload.sonarr_api_key = form.value.sonarr_api_key
 
   try {
     await store.saveSettings(payload)
     form.value.plex_token = ''
     form.value.radarr_api_key = ''
+    form.value.sonarr_api_key = ''
     toast.add({ severity: 'success', summary: 'Settings saved', life: 4000 })
   } catch {
     toast.add({ severity: 'error', summary: 'Save failed', detail: store.saveError, life: 6000 })

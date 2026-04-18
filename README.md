@@ -6,12 +6,14 @@ A web app for diagnosing and fixing issues with your Plex media library.
 - 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable tolerance.
 - 🎥 **Video Quality Check** — flags movies below a configurable minimum resolution threshold, with per-library settings.
 - 🔍 **Unmanaged Movies** — finds movies in Plex that have no matching entry in Radarr, so they won't receive quality upgrades or monitoring.
+- 📺 **Unmonitored Episodes** — finds shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.
 
 ## Requirements
 
 - Docker & Docker Compose
 - A running Plex Media Server
 - A running Radarr instance
+- A running Sonarr instance (for the Unmonitored Episodes tool)
 
 ## Quick Start
 
@@ -35,6 +37,8 @@ Alternatively, you can pre-seed credentials via environment variables in `docker
 | `PLEX_TOKEN`    | Plex authentication token            |
 | `RADARR_URL`    | Radarr URL (e.g. `http://192.168.1.50:7878`)        |
 | `RADARR_API_KEY`| Radarr API key                       |
+| `SONARR_URL`    | Sonarr URL (e.g. `http://192.168.1.50:8989`)        |
+| `SONARR_API_KEY`| Sonarr API key                       |
 
 ### Finding your Plex Token
 
@@ -43,6 +47,10 @@ See [Plex support article](https://support.plex.tv/articles/204059436-finding-an
 ### Finding your Radarr API Key
 
 Go to **Radarr → Settings → General → Security → API Key**.
+
+### Finding your Sonarr API Key
+
+Go to **Sonarr → Settings → General → Security → API Key**.
 
 ## Development
 
@@ -89,6 +97,14 @@ The frontend dev server proxies `/api/*` to `http://localhost:3000`, so run both
 2. Optionally select which Plex libraries to scan under **Plex Libraries** in Settings.
 3. Navigate to **Unmanaged Movies** and click **Run Check**.
 4. Movies present in Plex but with no matching TMDB entry in Radarr are listed. These movies won't receive automatic quality upgrades or monitoring.
+
+## Unmonitored Episodes
+
+1. Configure your Sonarr URL and API key in **Settings**.
+2. Navigate to **Unmonitored Episodes** and click **Run Check**.
+3. The tool scans all monitored series in Sonarr and identifies unmonitored seasons and individually unmonitored episodes.
+4. Expand a row to see season and episode details.
+5. Select series and click **Monitor All Selected** to enable monitoring for all unmonitored content in those series.
 
 ## Data Storage
 

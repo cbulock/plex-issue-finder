@@ -8,11 +8,14 @@ export const useSettingsStore = defineStore('settings', () => {
     plex_token: '',
     radarr_url: '',
     radarr_api_key: '',
+    sonarr_url: '',
+    sonarr_api_key: '',
     leeway_percent: '5',
     plex_library_ids: '',
     quality_thresholds: '{}',
     plex_token_set: false,
     radarr_api_key_set: false,
+    sonarr_api_key_set: false,
   })
   const loading = ref(false)
   const saveError = ref(null)
