@@ -171,11 +171,19 @@ router.post('/monitor', async (req, res) => {
   }
 
   // 2. Monitor full seasons (requires updating the series object)
-  if (Array.isArray(seasons)) {
+  if (Array.isArray(seasons) && seasons.length > 0) {
+    let allSeries;
+    try {
+      allSeries = await fetchSonarrSeries(config.sonarrUrl, config.sonarrApiKey);
+    } catch (err) {
+      const msg = `Failed to fetch series list: ${err.message}`;
+      console.error(`[Sonarr] ${msg}`);
+      errors.push(msg);
+      return res.json({ monitoredEpisodes, monitoredSeasons, errors });
+    }
+
     for (const { seriesId, seasonNumbers } of seasons) {
       try {
-        // Fetch the current series data
-        const allSeries = await fetchSonarrSeries(config.sonarrUrl, config.sonarrApiKey);
         const series = allSeries.find((s) => s.id === seriesId);
         if (!series) {
           errors.push(`Series ${seriesId} not found`);
