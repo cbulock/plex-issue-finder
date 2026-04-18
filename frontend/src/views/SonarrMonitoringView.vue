@@ -263,6 +263,21 @@ async function monitorSelected() {
       detail: parts.length > 0 ? `Enabled monitoring for ${parts.join(' and ')}.` : 'No changes needed.',
       life: 6000,
     })
+
+    const errors = Array.isArray(data?.errors) ? data.errors : []
+    if (errors.length > 0) {
+      const firstError = String(errors[0])
+      const additionalCount = errors.length - 1
+      toast.add({
+        severity: 'warn',
+        summary: 'Monitoring completed with warnings',
+        detail:
+          additionalCount > 0
+            ? `${firstError} (${additionalCount} more error(s))`
+            : firstError,
+        life: 8000,
+      })
+    }
     selectedSeries.value = []
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Monitor failed', detail: err.message, life: 6000 })
