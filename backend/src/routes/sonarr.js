@@ -50,7 +50,12 @@ router.get('/check', async (req, res) => {
         (s) => !s.monitored && s.seasonNumber > 0
       );
 
-      if (unmonitoredSeasons.length === 0) continue;
+      const hasMonitoredSeasons = (series.seasons || []).some(
+        (s) => s.monitored && s.seasonNumber > 0
+      );
+
+      // Skip series with no unmonitored seasons and no monitored seasons to check for individual episodes
+      if (unmonitoredSeasons.length === 0 && !hasMonitoredSeasons) continue;
 
       // Fetch episodes for this series to get episode-level details
       let episodes;
@@ -63,11 +68,6 @@ router.get('/check', async (req, res) => {
 
       const unmonitoredSeasonNumbers = new Set(unmonitoredSeasons.map((s) => s.seasonNumber));
 
-      // Get unmonitored episodes from unmonitored seasons
-      const unmonitoredEps = episodes.filter(
-        (ep) => unmonitoredSeasonNumbers.has(ep.seasonNumber) && !ep.monitored
-      );
-
       // Also find individually unmonitored episodes in monitored seasons
       const monitoredSeasonNumbers = new Set(
         (series.seasons || [])
@@ -77,6 +77,9 @@ router.get('/check', async (req, res) => {
       const individuallyUnmonitored = episodes.filter(
         (ep) => monitoredSeasonNumbers.has(ep.seasonNumber) && !ep.monitored
       );
+
+      // Skip if nothing is unmonitored
+      if (unmonitoredSeasons.length === 0 && individuallyUnmonitored.length === 0) continue;
 
       const seasonEntries = unmonitoredSeasons.map((s) => {
         const seasonEps = episodes.filter((ep) => ep.seasonNumber === s.seasonNumber);
@@ -100,7 +103,10 @@ router.get('/check', async (req, res) => {
       if (seasonEntries.length > 0 || individualEntries.length > 0) {
         seriesWithIssues++;
         totalUnmonitoredSeasons += seasonEntries.length;
-        totalUnmonitoredEpisodes += individualEntries.length + seasonEntries.reduce((sum, s) => sum + s.unmonitoredEpisodes, 0);
+        totalUnmonitoredEpisodes += individualEntries.length;
+        for (const s of seasonEntries) {
+          totalUnmonitoredEpisodes += s.unmonitoredEpisodes;
+        }
 
         results.push({
           seriesId: series.id,

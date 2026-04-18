@@ -249,12 +249,13 @@ async function monitorSelected() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ episodeIds, seasons }),
     })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Monitor failed')
+    const contentType = res.headers.get('content-type') || ''
+    const data = contentType.includes('application/json') ? await res.json() : null
+    if (!res.ok) throw new Error((data && data.error) || 'Monitor failed')
 
     const parts = []
-    if (data.monitoredSeasons > 0) parts.push(`${data.monitoredSeasons} season(s)`)
-    if (data.monitoredEpisodes > 0) parts.push(`${data.monitoredEpisodes} episode(s)`)
+    if (data && data.monitoredSeasons > 0) parts.push(`${data.monitoredSeasons} season(s)`)
+    if (data && data.monitoredEpisodes > 0) parts.push(`${data.monitoredEpisodes} episode(s)`)
 
     toast.add({
       severity: 'success',
