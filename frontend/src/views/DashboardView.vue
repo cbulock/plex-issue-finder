@@ -48,6 +48,13 @@ const features = [
     description:
       'Find movies in Plex that have no matching entry in Radarr. These movies won\'t receive quality upgrades or monitoring.',
   },
+  {
+    route: '/sonarr/monitoring',
+    icon: 'pi-list',
+    title: 'Unmonitored Episodes',
+    description:
+      'Find shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.',
+  },
 ]
 </script>
 

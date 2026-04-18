@@ -46,6 +46,8 @@ function initSchema() {
     ['plex_token', ''],
     ['radarr_url', ''],
     ['radarr_api_key', ''],
+    ['sonarr_url', ''],
+    ['sonarr_api_key', ''],
     ['leeway_percent', '5'],
     ['plex_library_ids', ''],
     ['quality_thresholds', '{}'],
@@ -63,6 +65,8 @@ function initSchema() {
     ['plex_token', process.env.PLEX_TOKEN],
     ['radarr_url', process.env.RADARR_URL],
     ['radarr_api_key', process.env.RADARR_API_KEY],
+    ['sonarr_url', process.env.SONARR_URL],
+    ['sonarr_api_key', process.env.SONARR_API_KEY],
   ];
   const update = db.prepare(
     'UPDATE settings SET value = ? WHERE key = ? AND value = ?'

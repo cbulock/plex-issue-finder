@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/CoverageView.vue'),
     },
     {
+      path: '/sonarr/monitoring',
+      name: 'sonarr-monitoring',
+      component: () => import('../views/SonarrMonitoringView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),

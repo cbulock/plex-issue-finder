@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAllSettings, setSetting } = require('../db');
 
-const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'leeway_percent', 'plex_library_ids', 'quality_thresholds'];
+const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'sonarr_url', 'sonarr_api_key', 'leeway_percent', 'plex_library_ids', 'quality_thresholds'];
 
 // GET /api/settings
 router.get('/', (req, res) => {
@@ -13,11 +13,14 @@ router.get('/', (req, res) => {
     plex_token: settings.plex_token ? '***' : '',
     radarr_url: settings.radarr_url || '',
     radarr_api_key: settings.radarr_api_key ? '***' : '',
+    sonarr_url: settings.sonarr_url || '',
+    sonarr_api_key: settings.sonarr_api_key ? '***' : '',
     leeway_percent: settings.leeway_percent || '5',
     plex_library_ids: settings.plex_library_ids || '',
     quality_thresholds: settings.quality_thresholds || '{}',
     plex_token_set: !!settings.plex_token,
     radarr_api_key_set: !!settings.radarr_api_key,
+    sonarr_api_key_set: !!settings.sonarr_api_key,
   });
 });
 
