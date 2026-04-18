@@ -8,6 +8,8 @@ const {
 } = require('../api/sonarr');
 const { getSetting } = require('../db');
 
+const CONCURRENCY_LIMIT = 5;
+
 function getSonarrConfig() {
   return {
     sonarrUrl: getSetting('sonarr_url'),
@@ -20,6 +22,26 @@ function validateSonarrConfig(config) {
   if (!config.sonarrUrl) missing.push('sonarr_url');
   if (!config.sonarrApiKey) missing.push('sonarr_api_key');
   return missing;
+}
+
+/**
+ * Process an array of items with limited concurrency.
+ * Returns an array of results in the same order as the input.
+ */
+async function mapWithConcurrency(items, fn, limit) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const idx = nextIndex++;
+      results[idx] = await fn(items[idx], idx);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
 }
 
 // GET /api/sonarr/check — find series with unmonitored seasons/episodes
@@ -43,30 +65,45 @@ router.get('/check', async (req, res) => {
     let totalUnmonitoredSeasons = 0;
     let totalUnmonitoredEpisodes = 0;
 
-    for (const series of allSeries) {
-      if (!series.monitored) continue; // skip entirely unmonitored series
+    // Filter to monitored series that need episode-level inspection
+    const candidates = allSeries.filter((series) => {
+      if (!series.monitored) return false;
+
+      const unmonitoredSeasons = (series.seasons || []).filter(
+        (s) => !s.monitored && s.seasonNumber > 0
+      );
+      const hasMonitoredSeasons = (series.seasons || []).some(
+        (s) => s.monitored && s.seasonNumber > 0
+      );
+
+      return unmonitoredSeasons.length > 0 || hasMonitoredSeasons;
+    });
+
+    console.log(`[Sonarr] ${candidates.length} candidate series to inspect (of ${allSeries.length} total)`);
+
+    // Fetch episodes for all candidates with limited concurrency
+    const episodeResults = await mapWithConcurrency(
+      candidates,
+      async (series) => {
+        try {
+          return await fetchSonarrEpisodes(config.sonarrUrl, config.sonarrApiKey, series.id);
+        } catch (err) {
+          console.warn(`[Sonarr] Failed to fetch episodes for "${series.title}": ${err.message}`);
+          return [];
+        }
+      },
+      CONCURRENCY_LIMIT
+    );
+
+    for (let i = 0; i < candidates.length; i++) {
+      const series = candidates[i];
+      const episodes = episodeResults[i];
 
       const unmonitoredSeasons = (series.seasons || []).filter(
         (s) => !s.monitored && s.seasonNumber > 0
       );
 
-      const hasMonitoredSeasons = (series.seasons || []).some(
-        (s) => s.monitored && s.seasonNumber > 0
-      );
-
-      // Skip series with no unmonitored seasons and no monitored seasons to check for individual episodes
-      if (unmonitoredSeasons.length === 0 && !hasMonitoredSeasons) continue;
-
-      // Fetch episodes for this series to get episode-level details
-      let episodes;
-      try {
-        episodes = await fetchSonarrEpisodes(config.sonarrUrl, config.sonarrApiKey, series.id);
-      } catch (err) {
-        console.warn(`[Sonarr] Failed to fetch episodes for "${series.title}": ${err.message}`);
-        episodes = [];
-      }
-
-      // Also find individually unmonitored episodes in monitored seasons
+      // Find individually unmonitored episodes in monitored seasons
       const monitoredSeasonNumbers = new Set(
         (series.seasons || [])
           .filter((s) => s.monitored && s.seasonNumber > 0)
@@ -151,6 +188,23 @@ router.post('/monitor', async (req, res) => {
     return res.status(400).json({ error: `Missing configuration: ${missing.join(', ')}` });
   }
 
+  // Validate episodeIds if provided
+  if (episodeIds !== undefined && (!Array.isArray(episodeIds) || !episodeIds.every((id) => typeof id === 'number'))) {
+    return res.status(400).json({ error: 'episodeIds must be an array of numbers' });
+  }
+
+  // Validate seasons if provided
+  if (seasons !== undefined) {
+    if (!Array.isArray(seasons)) {
+      return res.status(400).json({ error: 'seasons must be an array' });
+    }
+    for (const entry of seasons) {
+      if (!entry || typeof entry !== 'object' || typeof entry.seriesId !== 'number' || !Array.isArray(entry.seasonNumbers)) {
+        return res.status(400).json({ error: 'Each season entry must have a numeric seriesId and an array of seasonNumbers' });
+      }
+    }
+  }
+
   const errors = [];
   let monitoredEpisodes = 0;
   let monitoredSeasons = 0;
@@ -170,6 +224,7 @@ router.post('/monitor', async (req, res) => {
 
   // 2. Monitor full seasons (requires updating the series object)
   if (Array.isArray(seasons) && seasons.length > 0) {
+    // Fetch series list once for all season updates
     let allSeries;
     try {
       allSeries = await fetchSonarrSeries(config.sonarrUrl, config.sonarrApiKey);
