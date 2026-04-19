@@ -226,8 +226,12 @@ function missingFileCount(series) {
   return series.unmonitoredEpisodes.filter((ep) => !ep.hasFile).length
 }
 
+function hasMissingFiles(series) {
+  return series.unmonitoredEpisodes.some((ep) => !ep.hasFile)
+}
+
 function rowClass(data) {
-  return missingFileCount(data) > 0 ? 'row-missing-files' : null
+  return hasMissingFiles(data) ? 'row-missing-files' : null
 }
 
 const selectedSeries = ref([])
