@@ -161,7 +161,7 @@
                       v-if="data.titleSlug && sonarrBaseUrl"
                       :href="`${sonarrBaseUrl}/series/${data.titleSlug}`"
                       target="_blank"
-                      rel="noopener"
+                      rel="noopener noreferrer"
                       class="icon-link sonarr-link"
                       data-tooltip="Open in Sonarr"
                     ><i class="pi pi-external-link" /></a>
