@@ -109,12 +109,14 @@
                 :value="`${data.unmonitoredEpisodes.length} episode(s)`"
                 severity="warn"
               />
-              <Tag
-                v-if="missingFileCount(data) > 0"
-                :value="`${missingFileCount(data)} missing file(s)`"
-                severity="danger"
-                class="missing-files-tag"
-              />
+              <template v-for="missingCount in [missingFileCount(data)]" :key="`missing-files-${data.seriesId}`">
+                <Tag
+                  v-if="missingCount > 0"
+                  :value="`${missingCount} missing file(s)`"
+                  severity="danger"
+                  class="missing-files-tag"
+                />
+              </template>
             </div>
             <span v-else class="muted">—</span>
           </template>
