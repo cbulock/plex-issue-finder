@@ -127,11 +127,11 @@
         </Column>
 
         <!-- Expansion template -->
-        <template #expansion="{ data }">
+        <template #expansion="{ data: series }">
           <div class="expansion-content">
-            <div v-if="data.unmonitoredSeasons.length > 0" class="expansion-section">
+            <div v-if="series.unmonitoredSeasons.length > 0" class="expansion-section">
               <h4>Unmonitored Seasons</h4>
-              <DataTable :value="data.unmonitoredSeasons" size="small" class="nested-table">
+              <DataTable :value="series.unmonitoredSeasons" size="small" class="nested-table">
                 <Column field="seasonNumber" header="Season" sortable>
                   <template #body="{ data: season }">
                     Season {{ season.seasonNumber }}
@@ -141,9 +141,9 @@
                 <Column field="unmonitoredEpisodes" header="Unmonitored" />
               </DataTable>
             </div>
-            <div v-if="data.unmonitoredEpisodes.length > 0" class="expansion-section">
+            <div v-if="series.unmonitoredEpisodes.length > 0" class="expansion-section">
               <h4>Individually Unmonitored Episodes (in monitored seasons)</h4>
-              <DataTable :value="data.unmonitoredEpisodes" size="small" class="nested-table">
+              <DataTable :value="series.unmonitoredEpisodes" size="small" class="nested-table">
                 <Column header="Episode">
                   <template #body="{ data: ep }">
                     S{{ String(ep.seasonNumber).padStart(2, '0') }}E{{ String(ep.episodeNumber).padStart(2, '0') }}
@@ -158,12 +158,13 @@
                 <Column header="Link" style="width: 60px">
                   <template #body>
                     <a
-                      v-if="data.titleSlug && sonarrBaseUrl"
-                      :href="`${sonarrBaseUrl}/series/${data.titleSlug}`"
+                      v-if="series.titleSlug && sonarrBaseUrl"
+                      :href="`${sonarrBaseUrl}/series/${series.titleSlug}`"
                       target="_blank"
                       rel="noopener noreferrer"
                       class="icon-link sonarr-link"
                       data-tooltip="Open in Sonarr"
+                      aria-label="Open in Sonarr"
                     ><i class="pi pi-external-link" /></a>
                   </template>
                 </Column>
