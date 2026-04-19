@@ -80,6 +80,7 @@
         :rows="20"
         striped-rows
         size="small"
+        :row-class="rowClass"
       >
         <Column selection-mode="multiple" style="width: 3rem" />
         <Column expander style="width: 3rem" />
@@ -103,11 +104,20 @@
         </Column>
         <Column header="Unmonitored Episodes" sortable :sort-field="'unmonitoredEpisodes.length'">
           <template #body="{ data }">
-            <Tag
-              v-if="data.unmonitoredEpisodes.length > 0"
-              :value="`${data.unmonitoredEpisodes.length} episode(s)`"
-              severity="warn"
-            />
+            <div v-if="data.unmonitoredEpisodes.length > 0" class="episodes-cell">
+              <Tag
+                :value="`${data.unmonitoredEpisodes.length} episode(s)`"
+                severity="warn"
+              />
+              <template v-for="missingCount in [missingFileCount(data)]" :key="`missing-files-${data.seriesId}`">
+                <Tag
+                  v-if="missingCount > 0"
+                  :value="`${missingCount} missing file(s)`"
+                  severity="danger"
+                  class="missing-files-tag"
+                />
+              </template>
+            </div>
             <span v-else class="muted">—</span>
           </template>
         </Column>
@@ -165,7 +175,6 @@
                       class="icon-link sonarr-link"
                       data-tooltip="Open in Sonarr"
                       aria-label="Open in Sonarr"
-                      aria-label="Open in Sonarr"
                     ><i class="pi pi-external-link" /></a>
                   </template>
                 </Column>
@@ -214,6 +223,18 @@ const loading = computed(() => store.loading)
 const error = computed(() => store.error)
 
 const sonarrBaseUrl = computed(() => store.result?.summary?.sonarrUrl || '')
+
+function missingFileCount(series) {
+  return series.unmonitoredEpisodes.filter((ep) => !ep.hasFile).length
+}
+
+function hasMissingFiles(series) {
+  return series.unmonitoredEpisodes.some((ep) => !ep.hasFile)
+}
+
+function rowClass(data) {
+  return hasMissingFiles(data) ? 'row-missing-files' : null
+}
 
 const selectedSeries = ref([])
 const expandedRows = ref([])
@@ -431,6 +452,25 @@ async function monitorSelected() {
 
 .nested-table {
   font-size: 0.85rem;
+}
+
+.episodes-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.missing-files-tag {
+  font-size: 0.75rem;
+}
+
+:deep(.row-missing-files) {
+  background: rgba(229, 115, 115, 0.08) !important;
+}
+
+:deep(.row-missing-files:hover) {
+  background: rgba(229, 115, 115, 0.14) !important;
 }
 
 .empty-state, .idle-state, .loading-state {
