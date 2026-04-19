@@ -121,7 +121,7 @@
                 rel="noopener"
                 class="icon-link sonarr-link"
                 data-tooltip="Open in Sonarr"
-              ><i class="pi pi-list" /></a>
+              ><i class="pi pi-external-link" /></a>
             </div>
           </template>
         </Column>
