@@ -1,9 +1,10 @@
 services:
   plex-issue-finder:
-    build: .
+    image: ghcr.io/cbulock/plex-issue-finder:latest
+    pull_policy: always
     container_name: plex-issue-finder
     ports:
-      - "3000:3000"
+      - "8756:3000"
     volumes:
       - plex-issue-finder-data:/data
     environment:

@@ -20,10 +20,12 @@ A web app for diagnosing and fixing issues with your Plex media library.
 ```bash
 git clone https://github.com/cbulock/plex-issue-finder
 cd plex-issue-finder
-docker-compose up -d
+docker compose up -d
 ```
 
-Then open **http://\<your-server-ip\>:3000** in your browser.
+Then open **http://\<your-server-ip\>:8756** in your browser.
+
+> The pre-built image (`ghcr.io/cbulock/plex-issue-finder:latest`) is a single container that includes both the frontend and backend. It is pulled automatically from the GitHub Container Registry — no local build required.
 
 ## Configuration
 
