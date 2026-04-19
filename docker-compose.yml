@@ -1,7 +1,7 @@
 services:
   plex-issue-finder:
     image: ghcr.io/cbulock/plex-issue-finder:latest
-    build: .
+    pull_policy: always
     container_name: plex-issue-finder
     ports:
       - "8756:3000"
