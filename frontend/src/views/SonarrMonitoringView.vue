@@ -165,6 +165,7 @@
                       class="icon-link sonarr-link"
                       data-tooltip="Open in Sonarr"
                       aria-label="Open in Sonarr"
+                      aria-label="Open in Sonarr"
                     ><i class="pi pi-external-link" /></a>
                   </template>
                 </Column>
