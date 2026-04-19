@@ -25,7 +25,7 @@ docker compose up -d
 
 Then open **http://\<your-server-ip\>:8756** in your browser.
 
-> The image is published to the GitHub Container Registry (`ghcr.io/cbulock/plex-issue-finder:latest`) and is pulled automatically. To build locally instead, run `docker compose up -d --build`.
+> The pre-built image (`ghcr.io/cbulock/plex-issue-finder:latest`) is a single container that includes both the frontend and backend. It is pulled automatically from the GitHub Container Registry — no local build required.
 
 ## Configuration
 
