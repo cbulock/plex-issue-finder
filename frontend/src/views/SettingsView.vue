@@ -180,8 +180,38 @@
               />
             </div>
             <small>
-              Movies with a duration difference greater than {{ leewayNum }}% of the expected runtime will be flagged.
+              Duration checks flag items only when the difference exceeds the percentage threshold and the minimum minute difference.
             </small>
+          </div>
+          <div class="min-diff-grid">
+            <div class="field">
+              <label for="movie-min-diff">Movie minimum difference (minutes)</label>
+              <InputNumber
+                id="movie-min-diff"
+                v-model="movieMinDiffNum"
+                :min="0"
+                :max-fraction-digits="1"
+                suffix=" min"
+                class="w-full"
+              />
+              <small>
+                Default: 5 min. Movie checks use the larger of {{ leewayNum }}% or {{ movieMinDiffNum }} minutes.
+              </small>
+            </div>
+            <div class="field">
+              <label for="episode-min-diff">Episode minimum difference (minutes)</label>
+              <InputNumber
+                id="episode-min-diff"
+                v-model="episodeMinDiffNum"
+                :min="0"
+                :max-fraction-digits="1"
+                suffix=" min"
+                class="w-full"
+              />
+              <small>
+                Default: 3 min. Episode checks use the larger of {{ leewayNum }}% or {{ episodeMinDiffNum }} minutes.
+              </small>
+            </div>
           </div>
         </template>
       </Card>
@@ -231,6 +261,8 @@ const form = ref({
 })
 
 const leewayNum = ref(5)
+const movieMinDiffNum = ref(5)
+const episodeMinDiffNum = ref(3)
 
 // Library selection
 const availableLibraries = ref([])
@@ -245,6 +277,8 @@ onMounted(async () => {
   form.value.radarr_url = store.settings.radarr_url || ''
   form.value.sonarr_url = store.settings.sonarr_url || ''
   leewayNum.value = parseFloat(store.settings.leeway_percent) || 5
+  movieMinDiffNum.value = parseFloat(store.settings.movie_min_diff_min) || 5
+  episodeMinDiffNum.value = parseFloat(store.settings.episode_min_diff_min) || 3
 
   // Restore saved library selection
   const savedIds = store.settings.plex_library_ids || ''
@@ -284,6 +318,8 @@ async function handleSave() {
     radarr_url: form.value.radarr_url,
     sonarr_url: form.value.sonarr_url,
     leeway_percent: leewayNum.value,
+    movie_min_diff_min: movieMinDiffNum.value,
+    episode_min_diff_min: episodeMinDiffNum.value,
     plex_library_ids: selectedLibraryIds.value.join(','),
     quality_thresholds: JSON.stringify(qualityThresholds),
   }
@@ -384,6 +420,12 @@ async function handleSave() {
   width: 100%;
 }
 
+.min-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 640px) {
   .leeway-row {
     flex-direction: column;
@@ -394,6 +436,10 @@ async function handleSave() {
   .leeway-input {
     width: 100%;
     flex: 0 0 auto;
+  }
+
+  .min-diff-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAllSettings, setSetting } = require('../db');
 
-const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'sonarr_url', 'sonarr_api_key', 'leeway_percent', 'plex_library_ids', 'quality_thresholds'];
+const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'sonarr_url', 'sonarr_api_key', 'leeway_percent', 'movie_min_diff_min', 'episode_min_diff_min', 'plex_library_ids', 'quality_thresholds'];
 
 // GET /api/settings
 router.get('/', (req, res) => {
@@ -16,6 +16,8 @@ router.get('/', (req, res) => {
     sonarr_url: settings.sonarr_url || '',
     sonarr_api_key: settings.sonarr_api_key ? '***' : '',
     leeway_percent: settings.leeway_percent || '5',
+    movie_min_diff_min: settings.movie_min_diff_min || '5',
+    episode_min_diff_min: settings.episode_min_diff_min || '3',
     plex_library_ids: settings.plex_library_ids || '',
     quality_thresholds: settings.quality_thresholds || '{}',
     plex_token_set: !!settings.plex_token,
@@ -40,6 +42,14 @@ router.post('/', (req, res) => {
         const num = parseFloat(value);
         if (isNaN(num) || num < 0 || num > 100) {
           errors.push('leeway_percent must be a number between 0 and 100');
+          continue;
+        }
+      }
+
+      if (key === 'movie_min_diff_min' || key === 'episode_min_diff_min') {
+        const num = parseFloat(value);
+        if (isNaN(num) || num < 0) {
+          errors.push(`${key} must be a number greater than or equal to 0`);
           continue;
         }
       }

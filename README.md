@@ -3,11 +3,11 @@
 A web app for diagnosing and fixing issues with your Plex media library.
 
 **Current features:**
-- 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable tolerance.
+- 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable percentage tolerance and minimum minute difference.
 - 🎥 **Video Quality Check** — flags movies below a configurable minimum resolution threshold, with per-library settings.
 - 🔍 **Unmanaged Movies** — finds movies in Plex that have no matching entry in Radarr, so they won't receive quality upgrades or monitoring.
 - 📺 **Unmonitored Episodes** — finds shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.
-- ⏱️ **Episode Duration Check** — flags TV episodes whose actual Plex duration differs from the expected runtime in Sonarr by more than a configurable tolerance.
+- ⏱️ **Episode Duration Check** — flags TV episodes whose actual Plex duration differs from the expected runtime in Sonarr by more than a configurable percentage tolerance and minimum minute difference.
 
 ## Requirements
 
@@ -74,15 +74,15 @@ npm install
 npm run dev
 ```
 
-The frontend dev server proxies `/api/*` to `http://localhost:3000`, so run both simultaneously.
+The frontend dev server proxies `/api/*` to `http://127.0.0.1:3000`, so run both simultaneously.
 
 ## Movie Duration Check
 
 1. Configure Plex and Radarr URLs + credentials in **Settings**.
 2. Optionally select which Plex libraries to scan under **Plex Libraries** in Settings.
-3. Set your preferred leeway percentage (default: **5%**).
+3. Set your preferred leeway percentage (default: **5%**) and movie minimum difference (default: **5 min**).
 4. Navigate to **Movie Duration Check** and click **Run Check**.
-5. Movies where `|actual − expected| / expected > leeway%` are flagged.
+5. Movies are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
 6. Radarr runtimes are cached in SQLite. Use **Force Refresh Cache** to re-fetch.
 7. Select flagged movies and click **Redownload** to delete the existing file in Radarr and trigger a new automatic search.
 
@@ -112,9 +112,9 @@ The frontend dev server proxies `/api/*` to `http://localhost:3000`, so run both
 ## Episode Duration Check
 
 1. Configure Plex and Sonarr URLs + credentials in **Settings**.
-2. Set your preferred leeway percentage (default: **5%**) under **Duration Tolerance** in Settings.
+2. Set your preferred leeway percentage (default: **5%**) and episode minimum difference (default: **3 min**) under **Duration Tolerance** in Settings.
 3. Navigate to **Episode Duration Check** and click **Run Check**.
-4. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes where `|actual − expected| / expected > leeway%` are flagged.
+4. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
 5. Select flagged episodes and click **Redownload** to delete the existing file in Sonarr and trigger a new automatic episode search.
 
 ## Data Storage

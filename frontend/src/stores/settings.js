@@ -11,6 +11,8 @@ export const useSettingsStore = defineStore('settings', () => {
     sonarr_url: '',
     sonarr_api_key: '',
     leeway_percent: '5',
+    movie_min_diff_min: '5',
+    episode_min_diff_min: '3',
     plex_library_ids: '',
     quality_thresholds: '{}',
     plex_token_set: false,

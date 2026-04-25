@@ -18,6 +18,7 @@ function getConfig() {
     radarrUrl: getSetting('radarr_url'),
     radarrApiKey: getSetting('radarr_api_key'),
     leewayPercent: parseFloat(getSetting('leeway_percent') || '5'),
+    minDiffMinutes: parseFloat(getSetting('movie_min_diff_min') || '5'),
     selectedLibraryIds: libraryIds ? libraryIds.split(',').map((s) => s.trim()).filter(Boolean) : [],
   };
 }
@@ -159,7 +160,10 @@ router.get('/check', async (req, res) => {
 
       const expected = radarr.runtimeMinutes;
       const actual = movie.durationMin;
-      const diffPercent = Math.abs(actual - expected) / expected * 100;
+      const diffMinutes = Math.abs(actual - expected);
+      const diffPercent = diffMinutes / expected * 100;
+      const percentThresholdMinutes = expected * (config.leewayPercent / 100);
+      const thresholdMinutes = Math.max(percentThresholdMinutes, config.minDiffMinutes);
 
       const entry = {
         title: movie.title,
@@ -170,12 +174,14 @@ router.get('/check', async (req, res) => {
         radarrId: radarr.radarrId || null,
         plexDurationMin: actual,
         expectedDurationMin: expected,
+        diffMinutes,
         diffPercent: parseFloat(diffPercent.toFixed(2)),
+        thresholdMinutes: parseFloat(thresholdMinutes.toFixed(2)),
         matchedBy,
         fromCache: radarr.fromCache,
       };
 
-      if (diffPercent > config.leewayPercent) {
+      if (diffMinutes > thresholdMinutes) {
         flagged.push(entry);
       } else {
         ok.push(entry);
@@ -194,6 +200,7 @@ router.get('/check', async (req, res) => {
         ok: ok.length,
         noMatch: noMatch.length,
         leewayPercent: config.leewayPercent,
+        minDiffMinutes: config.minDiffMinutes,
         plexUrl: config.plexUrl,
         radarrUrl: config.radarrUrl,
         plexMachineId: machineIdentifier,

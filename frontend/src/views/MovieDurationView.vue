@@ -53,6 +53,10 @@
         <div class="summary-num">{{ result.summary.leewayPercent }}%</div>
         <div class="summary-label">Tolerance</div>
       </div>
+      <div class="summary-card summary-threshold">
+        <div class="summary-num">{{ result.summary.minDiffMinutes }}m</div>
+        <div class="summary-label">Min Diff</div>
+      </div>
     </div>
 
     <!-- Flagged movies table -->
@@ -147,7 +151,7 @@
 
     <div v-if="result && result.flagged.length === 0 && !loading" class="empty-state">
       <i class="pi pi-check-circle" />
-      <p>No movies flagged! All durations are within the {{ result.summary.leewayPercent }}% tolerance.</p>
+      <p>No movies flagged! Differences stayed within the larger of {{ result.summary.leewayPercent }}% or {{ result.summary.minDiffMinutes }} minutes.</p>
     </div>
 
     <!-- No Radarr match -->
@@ -372,6 +376,7 @@ function plexLink(ratingKey) {
 .summary-ok      { background: rgba(68, 189, 125, 0.1);  border-color: #44bd7d66; }
 .summary-nomatch { background: rgba(150, 150, 150, 0.08); border-color: #55555566; }
 .summary-leeway  { background: rgba(100, 149, 237, 0.1); border-color: #6495ed66; }
+.summary-threshold { background: rgba(142, 124, 195, 0.1); border-color: #8e7cc366; }
 
 .summary-num {
   font-size: 2rem;
