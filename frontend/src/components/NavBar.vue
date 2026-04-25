@@ -1,67 +1,176 @@
+<script setup>
+const navGroups = [
+  {
+    label: 'Workspace',
+    items: [
+      { to: '/', icon: 'pi-home', label: 'Dashboard' },
+      { to: '/settings', icon: 'pi-cog', label: 'Settings' },
+    ],
+  },
+  {
+    label: 'Diagnostics',
+    items: [
+      { to: '/movies/duration', icon: 'pi-clock', label: 'Movie duration' },
+      { to: '/movies/quality', icon: 'pi-video', label: 'Video quality' },
+      { to: '/coverage', icon: 'pi-search', label: 'Unmanaged movies' },
+      { to: '/sonarr/duration', icon: 'pi-stopwatch', label: 'Episode duration' },
+      { to: '/sonarr/monitoring', icon: 'pi-list', label: 'Unmonitored episodes' },
+    ],
+  },
+]
+</script>
+
 <template>
-  <div class="navbar">
-    <div class="navbar-brand">
-      <router-link to="/" class="brand-link">
-        <i class="pi pi-server" style="margin-right: 8px" />
-        Plex Issue Finder
-      </router-link>
+  <aside class="app-nav">
+    <router-link to="/" class="app-nav__brand">
+      <span class="app-nav__mark">PI</span>
+      <strong class="app-nav__brand-title">Plex Issue Finder</strong>
+    </router-link>
+
+    <div class="app-nav__groups">
+      <section v-for="group in navGroups" :key="group.label" class="app-nav__group">
+        <h2 class="app-nav__label">{{ group.label }}</h2>
+        <nav class="app-nav__items">
+          <router-link
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            class="app-nav__item"
+            exact-active-class="app-nav__item--active"
+          >
+            <i :class="`pi ${item.icon}`" />
+            <span class="app-nav__item-label">{{ item.label }}</span>
+          </router-link>
+        </nav>
+      </section>
     </div>
-    <nav class="navbar-nav">
-      <router-link to="/" class="nav-link" active-class="nav-link-active" exact>
-        <i class="pi pi-home" /> Dashboard
-      </router-link>
-      <router-link to="/settings" class="nav-link" active-class="nav-link-active">
-        <i class="pi pi-cog" /> Settings
-      </router-link>
-    </nav>
-  </div>
+  </aside>
 </template>
 
 <style scoped>
-.navbar {
+.app-nav {
+  width: 248px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border);
+}
+
+.app-nav__brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  height: 56px;
-  background: var(--p-surface-900, #1a1a2e);
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.app-nav__brand:hover {
+  border-bottom-color: var(--border);
+}
+
+.app-nav__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-mark);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }
 
-.brand-link {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--p-primary-400, #e5a00d);
-  text-decoration: none;
+.app-nav__brand-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.app-nav__groups {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-3) var(--space-2);
+}
+
+.app-nav__group + .app-nav__group {
+  margin-top: var(--space-4);
+}
+
+.app-nav__label {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--fg-subtle);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-nav__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-nav__item {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+  min-height: 42px;
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--fg-muted);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
-.navbar-nav {
-  display: flex;
-  gap: 1rem;
+.app-nav__item:hover {
+  background: var(--bg-muted);
+  color: var(--fg);
 }
 
-.nav-link {
-  color: #ccc;
-  text-decoration: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.92rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.15s;
+.app-nav__item:hover i {
+  color: var(--accent);
 }
 
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+.app-nav__item i {
+  color: var(--fg-subtle);
+  font-size: var(--text-sm);
 }
 
-.nav-link-active {
-  background: rgba(229, 160, 13, 0.15);
-  color: var(--p-primary-400, #e5a00d);
+.app-nav__item--active {
+  background: var(--bg-muted);
+  border-left-color: var(--accent);
+  color: var(--fg);
+}
+
+.app-nav__item--active i {
+  color: var(--accent);
+}
+
+.app-nav__item-label {
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+}
+
+@media (max-width: 960px) {
+  .app-nav {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .app-nav__groups {
+    overflow: visible;
+    padding-bottom: var(--space-2);
+  }
 }
 </style>

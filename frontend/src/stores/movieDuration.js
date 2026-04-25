@@ -4,13 +4,25 @@ import { apiGet } from '../api/client'
 
 const STORAGE_KEY = 'plex-movie-duration-results'
 
+function hasCompleteSummary(result) {
+  return result?.summary && result.summary.minDiffMinutes != null && result.summary.leewayPercent != null
+}
+
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { result: null, lastRun: null }
     const parsed = JSON.parse(raw)
+    const persistedResult = parsed.result && hasCompleteSummary(parsed.result)
+      ? markRaw(parsed.result)
+      : null
+
+    if (parsed.result && !persistedResult) {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+
     return {
-      result: parsed.result ? markRaw(parsed.result) : null,
+      result: persistedResult,
       lastRun: parsed.lastRun ? new Date(parsed.lastRun) : null,
     }
   } catch {

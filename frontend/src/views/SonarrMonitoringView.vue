@@ -1,8 +1,7 @@
 <template>
-  <div class="sonarr-view">
+  <div class="sonarr-view app-page app-page--wide">
     <div class="page-header">
       <div>
-        <h1>Unmonitored Episodes</h1>
         <p>
           Find shows in Sonarr with unmonitored seasons or episodes and optionally enable monitoring.
           <span v-if="lastRunLabel" class="last-run">{{ lastRunLabel }}</span>
@@ -45,7 +44,7 @@
     <!-- Results table -->
     <div v-if="result && result.results.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-circle" style="color: #e5a00d" />
+        <i class="pi pi-exclamation-circle" style="color: var(--accent)" />
         Series with Unmonitored Content ({{ result.results.length }})
       </h2>
 
@@ -162,7 +161,7 @@
                 <Column field="title" header="Title" />
                 <Column field="hasFile" header="Has File">
                   <template #body="{ data: ep }">
-                    <i :class="ep.hasFile ? 'pi pi-check' : 'pi pi-times'" :style="{ color: ep.hasFile ? '#44bd7d' : '#e57373' }" />
+                    <i :class="ep.hasFile ? 'pi pi-check' : 'pi pi-times'" :style="{ color: ep.hasFile ? 'var(--success)' : 'var(--danger)' }" />
                   </template>
                 </Column>
                 <Column header="Link" style="width: 60px">
@@ -323,164 +322,40 @@ async function monitorSelected() {
 </script>
 
 <style scoped>
-.sonarr-view {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
-
-.page-header h1 { margin: 0 0 0.4rem; font-size: 1.8rem; }
-
-.page-header p {
-  color: #b0b8c8;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.last-run { font-size: 0.8rem; color: #7a8a9a; font-style: italic; }
-.header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-.summary-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-}
-
-.summary-card {
-  flex: 1;
-  min-width: 110px;
-  padding: 1rem;
-  border-radius: 10px;
-  text-align: center;
-  border: 1px solid transparent;
-}
-
-.summary-total    { background: rgba(100,100,100,0.1); border-color: #444; }
-.summary-flagged  { background: rgba(229,160,13,0.1);  border-color: #e5a00d66; }
-.summary-seasons  { background: rgba(229,115,13,0.1);  border-color: #e5730d66; }
-.summary-episodes { background: rgba(229,115,115,0.1); border-color: #e5737366; }
-
-.summary-num { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.3rem; }
-.summary-flagged .summary-num  { color: #e5a00d; }
-.summary-seasons .summary-num  { color: #e5730d; }
-.summary-episodes .summary-num { color: #e57373; }
-
-.summary-label { font-size: 0.78rem; color: #b0b8c8; text-transform: uppercase; letter-spacing: 0.04em; }
-
-.section { margin-bottom: 2.5rem; }
-
-.section-title {
-  font-size: 1.1rem;
-  margin: 0 0 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.title-cell { display: flex; align-items: baseline; gap: 0.5rem; }
-.movie-year { font-size: 0.85rem; color: #b0b8c8; }
-.muted { color: #666; }
-
-.bulk-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1rem;
-  margin-bottom: 0.75rem;
-  background: rgba(229, 160, 13, 0.1);
-  border: 1px solid #e5a00d66;
-  border-radius: 8px;
-}
-
-.bulk-count { font-size: 0.9rem; color: #e5a00d; font-weight: 600; margin-right: auto; }
-
-.link-buttons { display: flex; gap: 0.5rem; align-items: center; }
-
-.icon-link { position: relative; font-size: 1.1rem; }
-.sonarr-link { color: #4fa3e0; }
-
-.icon-link[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1e2530;
-  color: #e0e6f0;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: 1px solid #3a4555;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 100;
-}
-.icon-link[data-tooltip]:hover::after { opacity: 1; }
-
 .expansion-content {
-  padding: 0.75rem 1rem 0.75rem 3rem;
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-6) + var(--space-2));
 }
 
-.expansion-section {
-  margin-bottom: 1rem;
-}
-
-.expansion-section:last-child {
-  margin-bottom: 0;
+.expansion-section + .expansion-section {
+  margin-top: var(--space-4);
 }
 
 .expansion-section h4 {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  color: #b0b8c8;
-}
-
-.nested-table {
-  font-size: 0.85rem;
+  margin: 0 0 var(--space-3);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
 }
 
 .episodes-cell {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
   align-items: center;
 }
 
 .missing-files-tag {
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
+}
+
+:deep(.nested-table) {
+  margin-top: var(--space-2);
 }
 
 :deep(.row-missing-files) {
-  background: rgba(229, 115, 115, 0.08) !important;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface)) !important;
 }
 
 :deep(.row-missing-files:hover) {
-  background: rgba(229, 115, 115, 0.14) !important;
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface)) !important;
 }
-
-.empty-state, .idle-state, .loading-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #b0b8c8;
-}
-
-.empty-state i, .idle-state i { font-size: 3rem; display: block; margin-bottom: 1rem; }
-.empty-state i { color: #44bd7d; }
-.idle-state i  { color: #b0b8c8; }
-.loading-state p { margin-top: 1rem; }
 </style>
