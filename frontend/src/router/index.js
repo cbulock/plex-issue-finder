@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/SonarrMonitoringView.vue'),
     },
     {
+      path: '/sonarr/duration',
+      name: 'episode-duration',
+      component: () => import('../views/EpisodeDurationView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),

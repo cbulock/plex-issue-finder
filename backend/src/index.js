@@ -16,6 +16,7 @@ app.use('/api/plex', require('./routes/plex'));
 app.use('/api/quality', require('./routes/quality'));
 app.use('/api/coverage', require('./routes/coverage'));
 app.use('/api/sonarr', require('./routes/sonarr'));
+app.use('/api/episode-duration', require('./routes/episodeDuration'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

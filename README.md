@@ -7,13 +7,14 @@ A web app for diagnosing and fixing issues with your Plex media library.
 - 🎥 **Video Quality Check** — flags movies below a configurable minimum resolution threshold, with per-library settings.
 - 🔍 **Unmanaged Movies** — finds movies in Plex that have no matching entry in Radarr, so they won't receive quality upgrades or monitoring.
 - 📺 **Unmonitored Episodes** — finds shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.
+- ⏱️ **Episode Duration Check** — flags TV episodes whose actual Plex duration differs from the expected runtime in Sonarr by more than a configurable tolerance.
 
 ## Requirements
 
 - Docker & Docker Compose
 - A running Plex Media Server
 - A running Radarr instance
-- A running Sonarr instance (for the Unmonitored Episodes tool)
+- A running Sonarr instance (for the Unmonitored Episodes and Episode Duration Check tools)
 
 ## Quick Start
 
@@ -107,6 +108,14 @@ The frontend dev server proxies `/api/*` to `http://localhost:3000`, so run both
 3. The tool scans all monitored series in Sonarr and identifies unmonitored seasons and individually unmonitored episodes.
 4. Expand a row to see season and episode details.
 5. Select series and click **Monitor All Selected** to enable monitoring for all unmonitored content in those series.
+
+## Episode Duration Check
+
+1. Configure Plex and Sonarr URLs + credentials in **Settings**.
+2. Set your preferred leeway percentage (default: **5%**) under **Duration Tolerance** in Settings.
+3. Navigate to **Episode Duration Check** and click **Run Check**.
+4. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes where `|actual − expected| / expected > leeway%` are flagged.
+5. Select flagged episodes and click **Redownload** to delete the existing file in Sonarr and trigger a new automatic episode search.
 
 ## Data Storage
 
