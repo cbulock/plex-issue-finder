@@ -67,7 +67,11 @@ router.get('/check', async (req, res) => {
       ));
     } catch (plexErr) {
       console.error('[EpisodeDuration] Plex fetch FAILED:', plexErr.message);
-      return res.status(502).json({ error: `Failed to connect to Plex: ${plexErr.message}` });
+      // Config/library errors (e.g. no matching libraries) are client errors, not gateway errors
+      const isConfigError = plexErr.message.includes('No matching TV show libraries');
+      return res
+        .status(isConfigError ? 400 : 502)
+        .json({ error: plexErr.message });
     }
 
     console.log(`[EpisodeDuration] Plex: ${plexEpisodes.length} total episodes`);
@@ -184,111 +188,116 @@ router.get('/check', async (req, res) => {
 // POST /api/episode-duration/redownload
 // Body: { episodes: [{ sonarrSeriesId, seasonNumber, episodeNumber }] }
 router.post('/redownload', async (req, res) => {
-  const { episodes } = req.body;
-  if (!Array.isArray(episodes) || episodes.length === 0) {
-    return res.status(400).json({ error: 'episodes must be a non-empty array' });
-  }
-
-  const config = getConfig();
-  const missing = validateConfig(config);
-  if (missing.length > 0) {
-    return res.status(400).json({ error: `Missing configuration: ${missing.join(', ')}` });
-  }
-
-  const baseUrl = config.sonarrUrl.replace(/\/$/, '');
-  const headers = { 'X-Api-Key': config.sonarrApiKey };
-
-  // Group requested episodes by seriesId for efficient fetching
-  const bySeriesId = new Map();
-  for (const ep of episodes) {
-    if (typeof ep.sonarrSeriesId !== 'number' || typeof ep.seasonNumber !== 'number' || typeof ep.episodeNumber !== 'number') {
-      return res.status(400).json({ error: 'Each episode entry must have numeric sonarrSeriesId, seasonNumber, and episodeNumber' });
+  try {
+    const { episodes } = req.body;
+    if (!Array.isArray(episodes) || episodes.length === 0) {
+      return res.status(400).json({ error: 'episodes must be a non-empty array' });
     }
-    if (!bySeriesId.has(ep.sonarrSeriesId)) {
-      bySeriesId.set(ep.sonarrSeriesId, []);
+
+    const config = getConfig();
+    const missing = validateConfig(config);
+    if (missing.length > 0) {
+      return res.status(400).json({ error: `Missing configuration: ${missing.join(', ')}` });
     }
-    bySeriesId.get(ep.sonarrSeriesId).push({ seasonNumber: ep.seasonNumber, episodeNumber: ep.episodeNumber });
-  }
 
-  console.log(`[EpisodeRedownload] Processing ${episodes.length} episode(s) across ${bySeriesId.size} series...`);
+    const baseUrl = config.sonarrUrl.replace(/\/$/, '');
+    const headers = { 'X-Api-Key': config.sonarrApiKey };
 
-  // Fetch episodes for each series and collect Sonarr episode IDs
-  const sonarrEpisodeIds = [];
-  const errors = [];
-
-  const seriesEntries = [...bySeriesId.entries()];
-  const episodeFetchResults = await mapWithConcurrency(
-    seriesEntries,
-    async ([seriesId, requestedEps]) => {
-      try {
-        const { data: seriesEpisodes } = await axios.get(`${baseUrl}/api/v3/episode`, {
-          headers,
-          params: { seriesId },
-        });
-        const matched = [];
-        for (const req of requestedEps) {
-          const found = seriesEpisodes.find(
-            (e) => e.seasonNumber === req.seasonNumber && e.episodeNumber === req.episodeNumber
-          );
-          if (found) {
-            matched.push(found);
-          } else {
-            errors.push(`Episode S${String(req.seasonNumber).padStart(2, '0')}E${String(req.episodeNumber).padStart(2, '0')} not found in Sonarr for seriesId=${seriesId}`);
-          }
-        }
-        return matched;
-      } catch (err) {
-        errors.push(`Failed to fetch episodes for seriesId=${seriesId}: ${err.message}`);
-        return [];
+    // Group requested episodes by seriesId for efficient fetching
+    const bySeriesId = new Map();
+    for (const ep of episodes) {
+      if (typeof ep.sonarrSeriesId !== 'number' || typeof ep.seasonNumber !== 'number' || typeof ep.episodeNumber !== 'number') {
+        return res.status(400).json({ error: 'Each episode entry must have numeric sonarrSeriesId, seasonNumber, and episodeNumber' });
       }
-    },
-    CONCURRENCY_LIMIT
-  );
-
-  for (const matched of episodeFetchResults) {
-    for (const ep of matched) {
-      sonarrEpisodeIds.push(ep.id);
+      if (!bySeriesId.has(ep.sonarrSeriesId)) {
+        bySeriesId.set(ep.sonarrSeriesId, []);
+      }
+      bySeriesId.get(ep.sonarrSeriesId).push({ seasonNumber: ep.seasonNumber, episodeNumber: ep.episodeNumber });
     }
-  }
 
-  if (sonarrEpisodeIds.length === 0) {
-    return res.json({ queued: 0, deleted: 0, errors });
-  }
+    console.log(`[EpisodeRedownload] Processing ${episodes.length} episode(s) across ${bySeriesId.size} series...`);
 
-  // Delete existing episode files
-  let deleted = 0;
-  const episodeFileIds = episodeFetchResults
-    .flat()
-    .filter((ep) => ep.hasFile && ep.episodeFileId)
-    .map((ep) => ep.episodeFileId);
+    // Fetch episodes for each series and collect Sonarr episode IDs
+    const sonarrEpisodeIds = [];
+    const errors = [];
 
-  for (const fileId of episodeFileIds) {
+    const seriesEntries = [...bySeriesId.entries()];
+    const episodeFetchResults = await mapWithConcurrency(
+      seriesEntries,
+      async ([seriesId, requestedEps]) => {
+        try {
+          const { data: seriesEpisodes } = await axios.get(`${baseUrl}/api/v3/episode`, {
+            headers,
+            params: { seriesId },
+          });
+          const matched = [];
+          for (const req of requestedEps) {
+            const found = seriesEpisodes.find(
+              (e) => e.seasonNumber === req.seasonNumber && e.episodeNumber === req.episodeNumber
+            );
+            if (found) {
+              matched.push(found);
+            } else {
+              errors.push(`Episode S${String(req.seasonNumber).padStart(2, '0')}E${String(req.episodeNumber).padStart(2, '0')} not found in Sonarr for seriesId=${seriesId}`);
+            }
+          }
+          return matched;
+        } catch (err) {
+          errors.push(`Failed to fetch episodes for seriesId=${seriesId}: ${err.message}`);
+          return [];
+        }
+      },
+      CONCURRENCY_LIMIT
+    );
+
+    for (const matched of episodeFetchResults) {
+      for (const ep of matched) {
+        sonarrEpisodeIds.push(ep.id);
+      }
+    }
+
+    if (sonarrEpisodeIds.length === 0) {
+      return res.json({ queued: 0, deleted: 0, errors });
+    }
+
+    // Delete existing episode files
+    let deleted = 0;
+    const episodeFileIds = episodeFetchResults
+      .flat()
+      .filter((ep) => ep.hasFile && ep.episodeFileId)
+      .map((ep) => ep.episodeFileId);
+
+    for (const fileId of episodeFileIds) {
+      try {
+        await axios.delete(`${baseUrl}/api/v3/episodefile/${fileId}`, { headers });
+        console.log(`[EpisodeRedownload] Deleted episode file id=${fileId}`);
+        deleted++;
+      } catch (err) {
+        const msg = `Failed to delete episode file id=${fileId}: ${err.message}`;
+        console.error(`[EpisodeRedownload] ${msg}`);
+        errors.push(msg);
+      }
+    }
+
+    // Trigger episode search
     try {
-      await axios.delete(`${baseUrl}/api/v3/episodefile/${fileId}`, { headers });
-      console.log(`[EpisodeRedownload] Deleted episode file id=${fileId}`);
-      deleted++;
+      await axios.post(
+        `${baseUrl}/api/v3/command`,
+        { name: 'EpisodeSearch', episodeIds: sonarrEpisodeIds },
+        { headers }
+      );
+      console.log(`[EpisodeRedownload] Search command queued for ${sonarrEpisodeIds.length} episode(s)`);
     } catch (err) {
-      const msg = `Failed to delete episode file id=${fileId}: ${err.message}`;
+      const msg = `Failed to trigger episode search: ${err.message}`;
       console.error(`[EpisodeRedownload] ${msg}`);
       errors.push(msg);
     }
-  }
 
-  // Trigger episode search
-  try {
-    await axios.post(
-      `${baseUrl}/api/v3/command`,
-      { name: 'EpisodeSearch', episodeIds: sonarrEpisodeIds },
-      { headers }
-    );
-    console.log(`[EpisodeRedownload] Search command queued for ${sonarrEpisodeIds.length} episode(s)`);
+    res.json({ queued: sonarrEpisodeIds.length, deleted, errors });
   } catch (err) {
-    const msg = `Failed to trigger episode search: ${err.message}`;
-    console.error(`[EpisodeRedownload] ${msg}`);
-    errors.push(msg);
+    console.error('[EpisodeRedownload] Unexpected error:', err.message, err.stack);
+    res.status(500).json({ error: err.message });
   }
-
-  res.json({ queued: sonarrEpisodeIds.length, deleted, errors });
 });
 
 module.exports = router;
