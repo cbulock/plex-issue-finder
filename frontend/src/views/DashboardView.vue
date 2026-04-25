@@ -55,6 +55,13 @@ const features = [
     description:
       'Find shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.',
   },
+  {
+    route: '/sonarr/duration',
+    icon: 'pi-clock',
+    title: 'Episode Duration Check',
+    description:
+      'Compare actual TV episode durations in Plex against expected runtimes from Sonarr. Flag episodes that appear to be incomplete downloads.',
+  },
 ]
 </script>
 
