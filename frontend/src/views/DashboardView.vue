@@ -1,7 +1,6 @@
 <template>
-  <div class="dashboard">
+  <div class="dashboard app-page">
     <div class="page-header">
-      <h1>Dashboard</h1>
       <p>Select a tool to diagnose and fix your Plex library.</p>
     </div>
 
@@ -109,75 +108,63 @@ const categories = [
 
 <style scoped>
 .dashboard {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 2.5rem;
-}
-
-.page-header {
-  margin-bottom: 2rem;
-}
-
-.page-header h1 {
-  margin: 0 0 0.4rem;
-  font-size: 1.8rem;
-}
-
-.page-header p {
-  color: #b0b8c8;
-  margin: 0;
+  padding-top: var(--space-8);
 }
 
 .category-section + .category-section {
-  margin-top: 2rem;
+  margin-top: var(--space-8);
 }
 
 .category-header {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .category-header h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.15rem;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
 }
 
 .category-header p {
   margin: 0;
-  color: #b0b8c8;
-  font-size: 0.92rem;
+  color: var(--fg-muted);
 }
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: var(--space-4);
 }
 
 .feature-card {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--p-surface-700, #2a2a3e);
-  background: var(--p-surface-800, #16213e);
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   text-decoration: none;
-  color: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  color: var(--fg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
   cursor: pointer;
 }
 
 .feature-card:hover {
-  border-color: var(--p-primary-400, #e5a00d);
-  box-shadow: 0 6px 18px rgba(229, 160, 13, 0.14);
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
 .feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  background: rgba(229, 160, 13, 0.12);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,8 +172,8 @@ const categories = [
 }
 
 .feature-icon i {
-  font-size: 1.4rem;
-  color: var(--p-primary-400, #e5a00d);
+  font-size: 1.1rem;
+  color: var(--accent);
 }
 
 .feature-body {
@@ -198,44 +185,42 @@ const categories = [
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .feature-body h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .feature-scope {
   flex-shrink: 0;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(229, 160, 13, 0.12);
-  color: var(--p-primary-400, #e5a00d);
-  font-size: 0.76rem;
-  font-weight: 600;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
 }
 
 .feature-body p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #b0b8c8;
-  line-height: 1.5;
+  color: var(--fg-muted);
 }
 
 .feature-arrow {
-  color: var(--p-text-muted-color, #888);
-  font-size: 0.9rem;
+  color: var(--fg-subtle);
+  font-size: var(--text-sm);
+  padding-top: 2px;
 }
 
 @media (max-width: 640px) {
-  .dashboard {
-    padding: 1.5rem 1rem 2rem;
-  }
-
   .feature-grid {
     grid-template-columns: 1fr;
   }

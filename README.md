@@ -1,6 +1,6 @@
 # Plex Issue Finder
 
-A web app for diagnosing and fixing issues with your Plex media library.
+A web app for diagnosing and fixing issues with your Plex media library, styled with the Emberline terminal-inspired design system.
 
 **Current features:**
 - 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable percentage tolerance and minimum minute difference.
@@ -75,6 +75,8 @@ npm run dev
 ```
 
 The frontend dev server proxies `/api/*` to `http://127.0.0.1:3000`, so run both simultaneously.
+
+The frontend also installs the shared Emberline design system directly from GitHub via `github:cbulock/design-system`, which provides the shared fonts, tokens, and base CSS used by the app shell and views.
 
 ## Movie Duration Check
 

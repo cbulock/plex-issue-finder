@@ -1,8 +1,7 @@
 <template>
-  <div class="duration-view">
+  <div class="duration-view app-page app-page--wide">
     <div class="page-header">
       <div>
-        <h1>Episode Duration Check</h1>
         <p>
           Compare actual Plex episode durations against expected runtimes from Sonarr.
           <span v-if="lastRunLabel" class="last-run">{{ lastRunLabel }}</span>
@@ -53,7 +52,7 @@
     <!-- Flagged episodes table -->
     <div v-if="result && result.flagged.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-triangle" style="color: #e5a00d" />
+        <i class="pi pi-exclamation-triangle" style="color: var(--accent)" />
         Flagged Episodes ({{ result.flagged.length }})
       </h2>
 
@@ -157,7 +156,7 @@
     <!-- No runtime match -->
     <div v-if="result && result.noMatch.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-question-circle" style="color: #b0b8c8" />
+        <i class="pi pi-question-circle" style="color: var(--fg-subtle)" />
         No Runtime in Sonarr ({{ result.noMatch.length }})
       </h2>
       <DataTable
@@ -299,170 +298,6 @@ function plexLink(ratingKey) {
 </script>
 
 <style scoped>
-.duration-view {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
-
-.page-header h1 {
-  margin: 0 0 0.4rem;
-  font-size: 1.8rem;
-}
-
-.page-header p {
-  color: #b0b8c8;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.last-run {
-  font-size: 0.8rem;
-  color: #7a8a9a;
-  font-style: italic;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/* Bulk action toolbar */
-.bulk-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1rem;
-  margin-bottom: 0.75rem;
-  background: rgba(229, 160, 13, 0.1);
-  border: 1px solid #e5a00d66;
-  border-radius: 8px;
-}
-
-.bulk-count {
-  font-size: 0.9rem;
-  color: #e5a00d;
-  font-weight: 600;
-  margin-right: auto;
-}
-
-/* Summary cards */
-.summary-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-}
-
-.summary-card {
-  flex: 1;
-  min-width: 110px;
-  padding: 1rem;
-  border-radius: 10px;
-  text-align: center;
-  border: 1px solid transparent;
-}
-
-.summary-total   { background: rgba(100, 100, 100, 0.1); border-color: #444; }
-.summary-flagged { background: rgba(229, 160, 13, 0.1);  border-color: #e5a00d66; }
-.summary-ok      { background: rgba(68, 189, 125, 0.1);  border-color: #44bd7d66; }
-.summary-nomatch { background: rgba(150, 150, 150, 0.08); border-color: #55555566; }
-.summary-leeway  { background: rgba(100, 149, 237, 0.1); border-color: #6495ed66; }
-.summary-threshold { background: rgba(142, 124, 195, 0.1); border-color: #8e7cc366; }
-
-.summary-num {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 0.3rem;
-}
-
-.summary-flagged .summary-num { color: #e5a00d; }
-.summary-ok .summary-num      { color: #44bd7d; }
-
-.summary-label {
-  font-size: 0.78rem;
-  color: #b0b8c8;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Sections */
-.section {
-  margin-bottom: 2.5rem;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  margin: 0 0 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Link buttons */
-.link-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* CSS tooltips */
-.icon-link {
-  position: relative;
-}
-
-.plex-link   { color: #e5a00d; }
-.sonarr-link { color: #4fa3e0; }
-
-.icon-link[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1e2530;
-  color: #e0e6f0;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: 1px solid #3a4555;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 100;
-}
-
-.icon-link[data-tooltip]:hover::after {
-  opacity: 1;
-}
-
-/* Title and episode cells */
-.title-cell {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.show-year {
-  font-size: 0.85rem;
-  color: #b0b8c8;
-}
-
 .episode-id {
   display: flex;
   flex-direction: column;
@@ -470,37 +305,15 @@ function plexLink(ratingKey) {
 }
 
 .ep-code {
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: #e0e6f0;
-  font-weight: 600;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.03em;
 }
 
 .ep-title {
-  font-size: 0.8rem;
-  color: #b0b8c8;
-}
-
-/* States */
-.empty-state,
-.idle-state,
-.loading-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #b0b8c8;
-}
-
-.empty-state i,
-.idle-state i {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.empty-state i { color: #44bd7d; }
-.idle-state i  { color: #b0b8c8; }
-
-.loading-state p {
-  margin-top: 1rem;
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
 }
 </style>

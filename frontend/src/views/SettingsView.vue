@@ -1,7 +1,6 @@
 <template>
-  <div class="settings-view">
+  <div class="settings-view app-page">
     <div class="page-header">
-      <h1>Settings</h1>
       <p>Configure your Plex, Radarr, and Sonarr connection details.</p>
     </div>
 
@@ -342,28 +341,12 @@ async function handleSave() {
 <style scoped>
 .settings-view {
   max-width: 720px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.page-header {
-  margin-bottom: 2rem;
-}
-
-.page-header h1 {
-  margin: 0 0 0.4rem;
-  font-size: 1.8rem;
-}
-
-.page-header p {
-  color: #b0b8c8;
-  margin: 0;
 }
 
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-4);
 }
 
 .settings-card {
@@ -373,8 +356,8 @@ async function handleSave() {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 1rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .field:last-child {
@@ -382,17 +365,17 @@ async function handleSave() {
 }
 
 .field label {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
 }
 
 .field small {
-  color: #b0b8c8;
-  font-size: 0.85rem;
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
 }
 
 .field small a {
-  color: var(--p-primary-400, #e5a00d);
+  color: var(--accent);
 }
 
 .w-full {
@@ -402,7 +385,7 @@ async function handleSave() {
 .leeway-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   width: 100%;
 }
 
@@ -412,8 +395,8 @@ async function handleSave() {
 }
 
 .leeway-input {
-  width: 90px;
-  flex: 0 0 90px;
+  width: 96px;
+  flex: 0 0 96px;
 }
 
 .leeway-input :deep(.p-inputtext) {
@@ -423,7 +406,7 @@ async function handleSave() {
 .min-diff-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 @media (max-width: 640px) {
@@ -449,9 +432,9 @@ async function handleSave() {
 }
 
 .field-hint {
-  color: #b0b8c8;
-  font-size: 0.85rem;
-  margin: 0 0 0.75rem;
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-3);
 }
 
 .field-hint.muted {
@@ -461,25 +444,31 @@ async function handleSave() {
 .library-load-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .library-error {
-  color: #e57373;
-  font-size: 0.85rem;
+  color: var(--danger);
+  font-size: var(--text-sm);
 }
 
 .library-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-3);
 }
 
 .library-item {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  flex-wrap: wrap;
 }
 
 .threshold-select {
@@ -492,16 +481,31 @@ async function handleSave() {
   flex-direction: column;
   cursor: pointer;
   gap: 2px;
+  min-width: 0;
 }
 
 .library-title {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
 }
 
 .library-meta {
-  font-size: 0.78rem;
-  color: #b0b8c8;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
   text-transform: capitalize;
+  letter-spacing: 0.04em;
+}
+
+:deep(.settings-card .p-card-caption) {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+:deep(.settings-card .p-card-title span) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 </style>
