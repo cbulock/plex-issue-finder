@@ -22,9 +22,9 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 RUN mkdir -p /data
 
 ENV DB_PATH=/data/plex-issue-finder.db
-ENV PORT=3000
+ENV PORT=8756
 ENV NODE_ENV=production
 
-EXPOSE 3000
+EXPOSE 8756
 
 CMD ["node", "src/index.js"]
