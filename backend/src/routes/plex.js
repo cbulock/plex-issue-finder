@@ -26,8 +26,9 @@ router.get('/libraries', async (req, res) => {
 // in the request body to override saved settings. This allows fetching libraries with unsaved
 // form values (e.g. before saving for the first time) without exposing credentials in the URL.
 router.post('/libraries', async (req, res) => {
-  const plexUrl = req.body.plex_url || getSetting('plex_url');
-  const plexToken = req.body.plex_token || getSetting('plex_token');
+  const body = req.body || {};
+  const plexUrl = body.plex_url || getSetting('plex_url');
+  const plexToken = body.plex_token || getSetting('plex_token');
 
   if (!plexUrl || !plexToken) {
     return res.status(400).json({ error: 'Plex URL and token are required. Enter them in the form or save them in Settings first.' });
