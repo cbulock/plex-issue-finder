@@ -230,6 +230,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useSettingsStore } from '../stores/settings'
+import { apiPost } from '../api/client'
 import { useToast } from 'primevue/usetoast'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
@@ -294,9 +295,10 @@ async function loadLibraries() {
   librariesLoading.value = true
   libraryError.value = ''
   try {
-    const res = await fetch('/api/plex/libraries')
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Failed to load libraries')
+    const body = {}
+    if (form.value.plex_url) body.plex_url = form.value.plex_url
+    if (form.value.plex_token) body.plex_token = form.value.plex_token
+    const data = await apiPost('/api/plex/libraries', body)
     availableLibraries.value = data
     // Default any new movie library to 1080p if not already set
     for (const lib of data) {
