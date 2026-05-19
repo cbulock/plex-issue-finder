@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, markRaw } from 'vue'
+import { apiGet } from '../api/client'
 
 const STORAGE_KEY = 'plex-movie-quality-results'
 
@@ -29,9 +30,7 @@ export const useMovieQualityStore = defineStore('movieQuality', () => {
     loading.value = true
     error.value = null
     try {
-      const res = await fetch('/api/quality/check')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Check failed')
+      const data = await apiGet('/api/quality/check')
       result.value = markRaw(data)
       lastRun.value = new Date()
       saveToStorage()

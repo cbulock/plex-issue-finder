@@ -48,6 +48,7 @@ router.get('/check', async (req, res) => {
     console.log(`[Quality] Fetched ${movies.length} movies from Plex, ${radarrMap.size} from Radarr`);
 
     const flagged = [];
+    const overThreshold = [];
     const ok = [];
 
     for (const movie of movies) {
@@ -73,25 +74,30 @@ router.get('/check', async (req, res) => {
 
       if (resRank < thresholdRank) {
         flagged.push(entry);
+      } else if (resRank > thresholdRank) {
+        overThreshold.push(entry);
       } else {
         ok.push(entry);
       }
     }
 
     flagged.sort((a, b) => a.title.localeCompare(b.title));
+    overThreshold.sort((a, b) => a.title.localeCompare(b.title));
 
-    console.log(`[Quality] Results: ${flagged.length} flagged, ${ok.length} ok`);
+    console.log(`[Quality] Results: ${flagged.length} below threshold, ${overThreshold.length} above threshold, ${ok.length} ok`);
 
     res.json({
       summary: {
         total: movies.length,
         flagged: flagged.length,
+        overThreshold: overThreshold.length,
         ok: ok.length,
         plexUrl,
         plexMachineId: machineIdentifier,
         radarrUrl: radarrUrl || '',
       },
       flagged,
+      overThreshold,
       ok,
     });
   } catch (err) {

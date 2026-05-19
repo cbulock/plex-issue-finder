@@ -4,7 +4,7 @@ A web app for diagnosing and fixing issues with your Plex media library, styled 
 
 **Current features:**
 - 🎬 **Movie Duration Check** — flags movies whose actual Plex duration differs from the expected runtime in Radarr by more than a configurable percentage tolerance and minimum minute difference.
-- 🎥 **Video Quality Check** — flags movies below a configurable minimum resolution threshold, with per-library settings.
+- 🎥 **Video Quality Check** — flags movies that are below or above a configurable per-library resolution target, with bulk actions to re-search better or smaller replacements in Radarr.
 - 🔍 **Unmanaged Movies** — finds movies in Plex that have no matching entry in Radarr, so they won't receive quality upgrades or monitoring.
 - 📺 **Unmonitored Episodes** — finds shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.
 - ⏱️ **Episode Duration Check** — flags TV episodes whose actual Plex duration differs from the expected runtime in Sonarr by more than a configurable percentage tolerance and minimum minute difference.
@@ -93,8 +93,10 @@ The frontend also installs the shared Emberline design system directly from GitH
 1. Configure Plex and Radarr URLs + credentials in **Settings**.
 2. Under **Plex Libraries** in Settings, select the libraries to scan and set a minimum resolution threshold per library (default: **1080p**).
 3. Navigate to **Video Quality Check** and click **Run Check**.
-4. Movies below their library's resolution threshold are flagged, showing resolution, codec, and audio details.
-5. Select flagged movies and click **Redownload** to trigger a Radarr quality upgrade search.
+4. Movies below their library's threshold are listed separately from movies above it, showing resolution, codec, and audio details for each.
+5. Select movies in the **Below Threshold** list and click **Upgrade** to delete the current file in Radarr and queue a replacement search.
+6. Select movies in the **Above Threshold** list and click **Downgrade** to delete the current file in Radarr and queue a replacement search for a smaller file.
+7. Radarr still decides the replacement based on that movie's current quality profile, so a downgrade will only happen if the Radarr profile allows a lower-quality result.
 
 ## Unmanaged Movies
 

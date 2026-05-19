@@ -8,138 +8,177 @@
         </p>
       </div>
       <div class="header-actions">
-        <Button
-          label="Run Check"
-          icon="pi pi-play"
-          :loading="loading"
-          @click="store.runCheck()"
-        />
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
+          <span class="button-content">
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
+          </span>
+        </CindorButton>
       </div>
     </div>
 
-    <Message v-if="error" severity="error" :closable="false" style="margin-bottom: 1rem">
+    <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
-    </Message>
+    </CindorAlert>
 
-    <!-- Summary cards -->
     <div v-if="result" class="summary-row">
-      <div class="summary-card summary-total">
-        <div class="summary-num">{{ result.summary.total }}</div>
-        <div class="summary-label">Total Movies</div>
-      </div>
-      <div class="summary-card summary-flagged">
-        <div class="summary-num">{{ result.summary.flagged }}</div>
-        <div class="summary-label">Below Threshold</div>
-      </div>
-      <div class="summary-card summary-ok">
-        <div class="summary-num">{{ result.summary.ok }}</div>
-        <div class="summary-label">OK</div>
-      </div>
+      <CindorStatCard label="Total Movies" :value="String(result.summary.total)" tone="neutral" />
+      <CindorStatCard label="Below Threshold" :value="String(result.summary.flagged)" tone="negative" />
+      <CindorStatCard label="Above Threshold" :value="String(result.summary.overThreshold || 0)" tone="neutral" />
+      <CindorStatCard label="OK" :value="String(result.summary.ok)" tone="positive" />
     </div>
 
-    <!-- Flagged table -->
-    <div v-if="result && result.flagged.length > 0" class="section">
+    <div v-if="result && flaggedRows.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-triangle" style="color: var(--accent)" />
-        Below Threshold ({{ result.flagged.length }})
+        <AppIcon name="pi-exclamation-triangle" :size="18" />
+        Below Threshold ({{ flaggedRows.length }})
       </h2>
 
-      <!-- Bulk action toolbar -->
-      <div v-if="selectedMovies.length > 0" class="bulk-toolbar">
-        <span class="bulk-count">{{ selectedMovies.length }} selected</span>
-        <Button
-          label="Redownload"
-          icon="pi pi-refresh"
-          severity="warn"
-          size="small"
-          :loading="redownloading"
-          @click="redownload"
-        />
-        <Button
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          size="small"
-          title="Clear selection"
-          @click="selectedMovies = []"
-        />
+      <div v-if="selectedUpgradeMovies.length > 0" class="bulk-toolbar">
+        <span class="bulk-count">{{ selectedUpgradeMovies.length }} selected</span>
+        <CindorButton type="button" variant="ghost" :disabled="redownloading" @click="upgradeSelected">
+          <span class="button-content">
+            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'pi-refresh'" :size="16" />
+            <span>{{ redownloading ? 'Queueing…' : 'Upgrade' }}</span>
+          </span>
+        </CindorButton>
+        <CindorButton type="button" variant="ghost" @click="selectedUpgradeMovies = []">
+          <span class="button-content">
+            <AppIcon name="pi-times" :size="16" />
+            <span>Clear</span>
+          </span>
+        </CindorButton>
       </div>
 
-      <DataTable
-        :value="result.flagged"
-        v-model:selection="selectedMovies"
-        selection-mode="multiple"
-        data-key="plexRatingKey"
-        :paginator="result.flagged.length > 20"
-        :rows="20"
-        striped-rows
-        size="small"
+      <AppDataTable
+        :columns="flaggedColumns"
+        :rows="flaggedRows"
+        row-key="plexRatingKey"
+        :rows-per-page="20"
+        selectable
+        :selected-rows="selectedUpgradeMovies"
+        @update:selected-rows="selectedUpgradeMovies = $event"
       >
-        <Column selection-mode="multiple" style="width: 3rem" />
-        <Column field="title" header="Title" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span>{{ data.title }}</span>
-              <span class="movie-year">{{ data.year }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="sectionTitle" header="Library" sortable />
-        <Column field="videoResolution" header="Resolution" sortable>
-          <template #body="{ data }">
-            <Tag
-              :value="data.videoResolution || 'Unknown'"
-              :severity="resolutionSeverity(data.videoResolution)"
-            />
-          </template>
-        </Column>
-        <Column field="videoCodec" header="Codec" sortable />
-        <Column field="audioChannels" header="Audio" sortable>
-          <template #body="{ data }">
-            {{ formatAudio(data.audioChannels, data.audioCodec) }}
-          </template>
-        </Column>
-        <Column field="threshold" header="Threshold" />
-        <Column header="Links" style="width: 110px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-              <a
-                v-if="data.radarrSlug && radarrBaseUrl"
-                :href="radarrLink(data.radarrSlug)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link radarr-link"
-                data-tooltip="Open in Radarr"
-              ><i class="pi pi-video" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-title="{ row }">
+          <div class="title-cell">
+            <span>{{ row.title }}</span>
+            <span class="movie-year">{{ row.year }}</span>
+          </div>
+        </template>
+        <template #cell-videoResolution="{ row }">
+          <AppTag
+            :value="row.videoResolution || 'Unknown'"
+            :severity="resolutionSeverity(row.videoResolution)"
+          />
+        </template>
+        <template #cell-audioChannels="{ row }">
+          {{ formatAudio(row.audioChannels, row.audioCodec) }}
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            <AppExternalLink
+              v-if="row.radarrSlug && radarrBaseUrl"
+              :href="radarrLink(row.radarrSlug)"
+              class="icon-link radarr-link"
+              title="Open in Radarr"
+              aria-label="Open in Radarr"
+            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
-    <div v-if="result && result.flagged.length === 0 && !loading" class="empty-state">
-      <i class="pi pi-check-circle" />
-      <p>All movies meet their library's quality threshold.</p>
+    <div v-if="result && overThresholdRows.length > 0" class="section">
+      <h2 class="section-title">
+        <AppIcon name="arrow-down" :size="18" />
+        Above Threshold ({{ overThresholdRows.length }})
+      </h2>
+
+      <CindorAlert tone="neutral" class="section-note">
+        Downgrade queues a replacement search in Radarr after deleting the current file. Radarr will only grab a lower-quality copy if that movie's quality profile allows it.
+      </CindorAlert>
+
+      <div v-if="selectedDowngradeMovies.length > 0" class="bulk-toolbar">
+        <span class="bulk-count">{{ selectedDowngradeMovies.length }} selected</span>
+        <CindorButton type="button" variant="ghost" :disabled="downgrading" @click="downgradeSelected">
+          <span class="button-content">
+            <AppIcon :name="downgrading ? 'loader-pinwheel' : 'arrow-down'" :size="16" />
+            <span>{{ downgrading ? 'Queueing…' : 'Downgrade' }}</span>
+          </span>
+        </CindorButton>
+        <CindorButton type="button" variant="ghost" @click="selectedDowngradeMovies = []">
+          <span class="button-content">
+            <AppIcon name="pi-times" :size="16" />
+            <span>Clear</span>
+          </span>
+        </CindorButton>
+      </div>
+
+      <AppDataTable
+        :columns="flaggedColumns"
+        :rows="overThresholdRows"
+        row-key="plexRatingKey"
+        :rows-per-page="20"
+        selectable
+        :selected-rows="selectedDowngradeMovies"
+        @update:selected-rows="selectedDowngradeMovies = $event"
+      >
+        <template #cell-title="{ row }">
+          <div class="title-cell">
+            <span>{{ row.title }}</span>
+            <span class="movie-year">{{ row.year }}</span>
+          </div>
+        </template>
+        <template #cell-videoResolution="{ row }">
+          <AppTag
+            :value="row.videoResolution || 'Unknown'"
+            :severity="resolutionSeverity(row.videoResolution)"
+          />
+        </template>
+        <template #cell-audioChannels="{ row }">
+          {{ formatAudio(row.audioChannels, row.audioCodec) }}
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            <AppExternalLink
+              v-if="row.radarrSlug && radarrBaseUrl"
+              :href="radarrLink(row.radarrSlug)"
+              class="icon-link radarr-link"
+              title="Open in Radarr"
+              aria-label="Open in Radarr"
+            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
-    <!-- Loading -->
+    <div v-if="result && flaggedRows.length === 0 && overThresholdRows.length === 0 && !loading" class="empty-state">
+      <AppIcon name="pi-check-circle" :size="42" />
+      <p>All movies match their library quality threshold.</p>
+    </div>
+
     <div v-if="loading" class="loading-state">
-      <ProgressSpinner style="width: 48px; height: 48px" />
-      <p>Fetching movie quality data from Plex…</p>
+      <CindorSpinner />
+      <p>Fetching movie quality data from Plex...</p>
     </div>
 
-    <!-- Idle -->
     <div v-if="!result && !loading" class="idle-state">
-      <i class="pi pi-video" />
-      <p>Run a check to see which movies are below their library quality threshold.</p>
+      <AppIcon name="pi-video" :size="42" />
+      <p>Run a check to see which movies are below or above their library quality threshold.</p>
     </div>
   </div>
 </template>
@@ -147,16 +186,16 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useMovieQualityStore } from '../stores/movieQuality'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
+import { useAppToast } from '../composables/useAppToast'
+import { apiPost } from '../api/client'
+import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import AppDataTable from '../components/AppDataTable.vue'
+import AppExternalLink from '../components/AppExternalLink.vue'
+import AppIcon from '../components/AppIcon.vue'
+import AppTag from '../components/AppTag.vue'
 
 const store = useMovieQualityStore()
-const toast = useToast()
+const toast = useAppToast()
 
 const result = computed(() => store.result)
 const loading = computed(() => store.loading)
@@ -165,9 +204,23 @@ const error = computed(() => store.error)
 const plexBaseUrl = computed(() => store.result?.summary?.plexUrl || '')
 const plexMachineId = computed(() => store.result?.summary?.plexMachineId || '')
 const radarrBaseUrl = computed(() => store.result?.summary?.radarrUrl || '')
+const flaggedRows = computed(() => store.result?.flagged || [])
+const overThresholdRows = computed(() => store.result?.overThreshold || [])
 
-const selectedMovies = ref([])
+const selectedUpgradeMovies = ref([])
+const selectedDowngradeMovies = ref([])
 const redownloading = ref(false)
+const downgrading = ref(false)
+
+const flaggedColumns = [
+  { key: 'title', label: 'Title', sortable: true },
+  { key: 'sectionTitle', label: 'Library', sortable: true },
+  { key: 'videoResolution', label: 'Resolution', sortable: true },
+  { key: 'videoCodec', label: 'Codec', sortable: true },
+  { key: 'audioChannels', label: 'Audio', sortable: true },
+  { key: 'threshold', label: 'Threshold' },
+  { key: 'links', label: 'Links', width: '7rem' },
+]
 
 const lastRunLabel = computed(() => {
   if (!store.lastRun) return null
@@ -207,33 +260,83 @@ function formatAudio(channels, codec) {
   return codec ? `${ch} ${codec.toUpperCase()}` : ch
 }
 
-async function redownload() {
-  const ids = selectedMovies.value.map((m) => m.radarrId).filter(Boolean)
-  if (ids.length === 0) {
-    toast.add({ severity: 'warn', summary: 'No Radarr ID', detail: 'Selected movies have no Radarr ID. Run the Movie Duration Check first to populate IDs.', life: 5000 })
-    return
+function getSelectedMovieIds(rows) {
+  const ids = []
+  let skipped = 0
+
+  for (const row of rows) {
+    if (!row.radarrId) {
+      skipped++
+      continue
+    }
+
+    if (!ids.includes(row.radarrId)) {
+      ids.push(row.radarrId)
+    }
   }
-  redownloading.value = true
+
+  return { ids, skipped }
+}
+
+async function queueReplacementSearch(rows, loadingRef, successSummary, errorSummary, emptyDetail, additionalDetail = '') {
+  const { ids, skipped } = getSelectedMovieIds(rows)
+  if (ids.length === 0) {
+    toast.add({ severity: 'warn', summary: 'No Radarr match', detail: emptyDetail, life: 5000 })
+    return false
+  }
+
+  loadingRef.value = true
   try {
-    const res = await fetch('/api/movies/redownload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ movieIds: ids }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Redownload failed')
+    const data = await apiPost('/api/movies/redownload', { movieIds: ids })
+    const detail = [
+      `${data.queued} replacement search(es) queued`,
+      `${data.deleted} file(s) deleted`,
+      skipped ? `${skipped} skipped without a Radarr match` : '',
+      data.errors.length ? `${data.errors.length} error(s)` : '',
+      additionalDetail,
+    ].filter(Boolean).join('. ') + '.'
+
     toast.add({
       severity: 'success',
-      summary: 'Redownload queued',
-      detail: `${data.queued} search(es) queued, ${data.deleted} file(s) deleted.`,
+      summary: successSummary,
+      detail,
       life: 6000,
     })
-    selectedMovies.value = []
+    return true
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Redownload failed', detail: err.message, life: 6000 })
+    toast.add({ severity: 'error', summary: errorSummary, detail: err.message, life: 6000 })
+    return false
   } finally {
-    redownloading.value = false
+    loadingRef.value = false
   }
+}
+
+async function upgradeSelected() {
+  const queued = await queueReplacementSearch(
+    selectedUpgradeMovies.value,
+    redownloading,
+    'Upgrade search queued',
+    'Upgrade search failed',
+    'Selected movies do not have a matching Radarr entry.',
+  )
+  if (queued) selectedUpgradeMovies.value = []
+}
+
+async function downgradeSelected() {
+  const queued = await queueReplacementSearch(
+    selectedDowngradeMovies.value,
+    downgrading,
+    'Downgrade search queued',
+    'Downgrade search failed',
+    'Selected movies do not have a matching Radarr entry.',
+    'Radarr will use each movie\'s current quality profile when choosing a replacement',
+  )
+  if (queued) selectedDowngradeMovies.value = []
 }
 </script>
 
+<style scoped>
+.section-note {
+  margin-block-end: var(--space-3);
+}
+</style>
