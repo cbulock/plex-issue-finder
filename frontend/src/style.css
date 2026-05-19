@@ -49,6 +49,21 @@ a {
   margin: 0;
 }
 
+.app-topbar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-subtle) 90%, transparent);
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
 .app-main {
   flex: 1;
   min-width: 0;
@@ -258,6 +273,11 @@ a {
 
   .app-topbar {
     padding: var(--space-4);
+  }
+
+  .app-topbar-status {
+    width: 100%;
+    justify-content: center;
   }
 
 }

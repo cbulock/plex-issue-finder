@@ -4,7 +4,7 @@
       <p>Configure your Plex, Radarr, and Sonarr connection details.</p>
     </div>
 
-    <CindorForm @submit="handleSave" class="settings-form">
+    <CindorForm class="settings-form" :submitting="store.loading" @submit="handleSave">
       <CindorCard class="settings-card">
         <section class="settings-card-section">
           <h2 class="settings-card-title"><AppIcon name="pi-play-circle" :size="18" />Plex Media Server</h2>
@@ -358,7 +358,9 @@ function setLibrarySelected(key, checked) {
   selectedLibraryIds.value = selectedLibraryIds.value.filter((id) => id !== key)
 }
 
-async function handleSave() {
+async function handleSave(event) {
+  event?.preventDefault?.()
+
   const payload = {
     plex_url: form.value.plex_url,
     radarr_url: form.value.radarr_url,
@@ -381,7 +383,7 @@ async function handleSave() {
     form.value.sonarr_api_key = ''
     toast.add({ severity: 'success', summary: 'Settings saved', life: 4000 })
   } catch {
-    toast.add({ severity: 'error', summary: 'Save failed', detail: store.saveError, life: 6000 })
+    toast.add({ severity: 'error', summary: 'Save failed', detail: store.saveError || 'Unable to save settings.', life: 6000 })
   }
 }
 </script>

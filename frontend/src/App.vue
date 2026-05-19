@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { CindorProvider, CindorToastRegion } from 'cindor-ui-vue'
+import { CindorProvider, CindorSpinner, CindorToastRegion } from 'cindor-ui-vue'
 import NavBar from './components/NavBar.vue'
+import { routeLoading } from './router'
 
 const route = useRoute()
 
@@ -17,6 +18,10 @@ const currentTitle = computed(() => route.meta.title || 'Plex Issue Finder')
       <div class="app-frame">
         <header class="app-topbar">
           <h1 class="app-topbar-title">{{ currentTitle }}</h1>
+          <div v-if="routeLoading" class="app-topbar-status" aria-live="polite">
+            <CindorSpinner size="sm" />
+            <span>Loading view…</span>
+          </div>
         </header>
         <main class="app-main">
           <router-view />
