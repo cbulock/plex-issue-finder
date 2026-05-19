@@ -8,210 +8,155 @@
         </p>
       </div>
       <div class="header-actions">
-        <Button
-          label="Run Check"
-          icon="pi pi-play"
-          :loading="loading"
-          @click="store.runCheck()"
-        />
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
+          <span class="button-content">
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
+          </span>
+        </CindorButton>
       </div>
     </div>
 
-    <Message v-if="error" severity="error" :closable="false" style="margin-bottom: 1rem">
+    <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
-    </Message>
+    </CindorAlert>
 
-    <!-- Summary cards -->
     <div v-if="result" class="summary-row">
-      <div class="summary-card summary-total">
-        <div class="summary-num">{{ result.summary.total }}</div>
-        <div class="summary-label">Managed Episodes</div>
-      </div>
-      <div class="summary-card summary-flagged">
-        <div class="summary-num">{{ result.summary.flagged }}</div>
-        <div class="summary-label">Flagged</div>
-      </div>
-      <div class="summary-card summary-ok">
-        <div class="summary-num">{{ result.summary.ok }}</div>
-        <div class="summary-label">OK</div>
-      </div>
-      <div class="summary-card summary-nomatch">
-        <div class="summary-num">{{ result.summary.noMatch }}</div>
-        <div class="summary-label">No Runtime</div>
-      </div>
-      <div class="summary-card summary-leeway">
-        <div class="summary-num">{{ result.summary.leewayPercent }}%</div>
-        <div class="summary-label">Tolerance</div>
-      </div>
-      <div class="summary-card summary-threshold">
-        <div class="summary-num">{{ result.summary.minDiffMinutes }}m</div>
-        <div class="summary-label">Min Diff</div>
-      </div>
+      <CindorStatCard label="Managed Episodes" :value="String(result.summary.total)" tone="neutral" />
+      <CindorStatCard label="Flagged" :value="String(result.summary.flagged)" tone="negative" />
+      <CindorStatCard label="OK" :value="String(result.summary.ok)" tone="positive" />
+      <CindorStatCard label="No Runtime" :value="String(result.summary.noMatch)" tone="neutral" />
+      <CindorStatCard label="Tolerance" :value="`${result.summary.leewayPercent}%`" tone="neutral" />
+      <CindorStatCard label="Min Diff" :value="`${result.summary.minDiffMinutes}m`" tone="neutral" />
     </div>
 
-    <!-- Flagged episodes table -->
     <div v-if="result && result.flagged.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-triangle" style="color: var(--accent)" />
+        <AppIcon name="pi-exclamation-triangle" :size="18" />
         Flagged Episodes ({{ result.flagged.length }})
       </h2>
 
-      <!-- Bulk action toolbar -->
       <div v-if="selectedEpisodes.length > 0" class="bulk-toolbar">
         <span class="bulk-count">{{ selectedEpisodes.length }} selected</span>
-        <Button
-          label="Redownload"
-          icon="pi pi-refresh"
-          severity="warn"
-          size="small"
-          :loading="redownloading"
-          @click="redownload"
-        />
-        <Button
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          size="small"
-          title="Clear selection"
-          @click="selectedEpisodes = []"
-        />
+        <CindorButton type="button" variant="ghost" :disabled="redownloading" @click="redownload">
+          <span class="button-content">
+            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'pi-refresh'" :size="16" />
+            <span>{{ redownloading ? 'Queueing…' : 'Redownload' }}</span>
+          </span>
+        </CindorButton>
+        <CindorButton type="button" variant="ghost" @click="selectedEpisodes = []">
+          <span class="button-content">
+            <AppIcon name="pi-times" :size="16" />
+            <span>Clear</span>
+          </span>
+        </CindorButton>
       </div>
 
-      <DataTable
-        :value="result.flagged"
-        v-model:selection="selectedEpisodes"
-        selection-mode="multiple"
-        data-key="plexRatingKey"
-        :paginator="result.flagged.length > 20"
-        :rows="20"
-        class="flagged-table"
-        striped-rows
-        size="small"
+      <AppDataTable
+        :columns="flaggedColumns"
+        :rows="result.flagged"
+        row-key="plexRatingKey"
+        :rows-per-page="20"
+        selectable
+        :selected-rows="selectedEpisodes"
+        @update:selected-rows="selectedEpisodes = $event"
       >
-        <Column selection-mode="multiple" style="width: 3rem" />
-        <Column field="showTitle" header="Show" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span class="show-title">{{ data.showTitle }}</span>
-              <span class="show-year">{{ data.showYear }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="seasonNumber" header="Episode" sortable>
-          <template #body="{ data }">
-            <div class="episode-id">
-              <span class="ep-code">S{{ String(data.seasonNumber).padStart(2, '0') }}E{{ String(data.episodeNumber).padStart(2, '0') }}</span>
-              <span class="ep-title">{{ data.title }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="plexDurationMin" header="Plex Duration" sortable>
-          <template #body="{ data }">
-            {{ formatMinutes(data.plexDurationMin) }}
-          </template>
-        </Column>
-        <Column field="expectedDurationMin" header="Expected" sortable>
-          <template #body="{ data }">
-            {{ formatMinutes(data.expectedDurationMin) }}
-          </template>
-        </Column>
-        <Column field="diffPercent" header="Difference" sortable>
-          <template #body="{ data }">
-            <Tag
-              :value="`${data.diffPercent}%`"
-              :severity="data.diffPercent > 20 ? 'danger' : 'warn'"
-            />
-          </template>
-        </Column>
-        <Column header="Links" style="width: 110px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-              <a
-                v-if="data.sonarrSeriesSlug && sonarrBaseUrl"
-                :href="`${sonarrBaseUrl}/series/${data.sonarrSeriesSlug}`"
-                target="_blank"
-                rel="noopener"
-                class="icon-link sonarr-link"
-                data-tooltip="Open in Sonarr"
-              ><i class="pi pi-video" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-showTitle="{ row }">
+          <div class="title-cell">
+            <span class="show-title">{{ row.showTitle }}</span>
+            <span class="show-year">{{ row.showYear }}</span>
+          </div>
+        </template>
+        <template #cell-seasonNumber="{ row }">
+          <div class="episode-id">
+            <span class="ep-code">S{{ String(row.seasonNumber).padStart(2, '0') }}E{{ String(row.episodeNumber).padStart(2, '0') }}</span>
+            <span class="ep-title">{{ row.title }}</span>
+          </div>
+        </template>
+        <template #cell-plexDurationMin="{ row }">
+          {{ formatMinutes(row.plexDurationMin) }}
+        </template>
+        <template #cell-expectedDurationMin="{ row }">
+          {{ formatMinutes(row.expectedDurationMin) }}
+        </template>
+        <template #cell-diffPercent="{ row }">
+          <AppTag
+            :value="`${row.diffPercent}%`"
+            :severity="row.diffPercent > 20 ? 'danger' : 'warn'"
+          />
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            <AppExternalLink
+              v-if="row.sonarrSeriesSlug && sonarrBaseUrl"
+              :href="`${sonarrBaseUrl}/series/${row.sonarrSeriesSlug}`"
+              class="icon-link sonarr-link"
+              title="Open in Sonarr"
+              aria-label="Open in Sonarr"
+            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
     <div v-if="result && result.flagged.length === 0 && !loading" class="empty-state">
-      <i class="pi pi-check-circle" />
+      <AppIcon name="pi-check-circle" :size="42" />
       <p>No episodes flagged! Differences stayed within the larger of {{ result.summary.leewayPercent }}% or {{ result.summary.minDiffMinutes }} minutes.</p>
     </div>
 
-    <!-- No runtime match -->
     <div v-if="result && result.noMatch.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-question-circle" style="color: var(--fg-subtle)" />
+        <AppIcon name="pi-question-circle" :size="18" />
         No Runtime in Sonarr ({{ result.noMatch.length }})
       </h2>
-      <DataTable
-        :value="result.noMatch"
-        :paginator="result.noMatch.length > 10"
-        :rows="10"
-        size="small"
-        striped-rows
+      <AppDataTable
+        :columns="noMatchColumns"
+        :rows="result.noMatch"
+        row-key="plexRatingKey"
+        :rows-per-page="10"
+        empty-message="No unmatched episodes."
       >
-        <Column field="showTitle" header="Show" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span class="show-title">{{ data.showTitle }}</span>
-              <span class="show-year">{{ data.showYear }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="seasonNumber" header="Episode" sortable>
-          <template #body="{ data }">
-            S{{ String(data.seasonNumber).padStart(2, '0') }}E{{ String(data.episodeNumber).padStart(2, '0') }}
-          </template>
-        </Column>
-        <Column field="plexDurationMin" header="Plex Duration">
-          <template #body="{ data }">
-            {{ formatMinutes(data.plexDurationMin) }}
-          </template>
-        </Column>
-        <Column field="reason" header="Reason" />
-        <Column header="Links" style="width: 80px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-showTitle="{ row }">
+          <div class="title-cell">
+            <span class="show-title">{{ row.showTitle }}</span>
+            <span class="show-year">{{ row.showYear }}</span>
+          </div>
+        </template>
+        <template #cell-seasonNumber="{ row }">
+          S{{ String(row.seasonNumber).padStart(2, '0') }}E{{ String(row.episodeNumber).padStart(2, '0') }}
+        </template>
+        <template #cell-plexDurationMin="{ row }">
+          {{ formatMinutes(row.plexDurationMin) }}
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
-    <!-- Initial state -->
     <div v-if="!result && !loading" class="idle-state">
-      <i class="pi pi-clock" />
+      <AppIcon name="pi-clock" :size="42" />
       <p>Click <strong>Run Check</strong> to scan your Plex library for episodes with unexpected durations.</p>
     </div>
 
-    <!-- Loading state -->
     <div v-if="loading" class="loading-state">
-      <ProgressSpinner />
-      <p>Fetching episode data from Plex and Sonarr…</p>
+      <CindorSpinner />
+      <p>Fetching episode data from Plex and Sonarr...</p>
     </div>
   </div>
 </template>
@@ -219,17 +164,16 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useEpisodeDurationStore } from '../stores/episodeDuration'
-import { useToast } from 'primevue/usetoast'
+import { useAppToast } from '../composables/useAppToast'
 import { apiPost } from '../api/client'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
+import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import AppDataTable from '../components/AppDataTable.vue'
+import AppExternalLink from '../components/AppExternalLink.vue'
+import AppIcon from '../components/AppIcon.vue'
+import AppTag from '../components/AppTag.vue'
 
 const store = useEpisodeDurationStore()
-const toast = useToast()
+const toast = useAppToast()
 
 const result = computed(() => store.result)
 const loading = computed(() => store.loading)
@@ -241,6 +185,23 @@ const sonarrBaseUrl = computed(() => store.result?.summary?.sonarrUrl || '')
 
 const selectedEpisodes = ref([])
 const redownloading = ref(false)
+
+const flaggedColumns = [
+  { key: 'showTitle', label: 'Show', sortable: true },
+  { key: 'seasonNumber', label: 'Episode', sortable: true },
+  { key: 'plexDurationMin', label: 'Plex Duration', sortable: true },
+  { key: 'expectedDurationMin', label: 'Expected', sortable: true },
+  { key: 'diffPercent', label: 'Difference', sortable: true },
+  { key: 'links', label: 'Links', width: '7rem' },
+]
+
+const noMatchColumns = [
+  { key: 'showTitle', label: 'Show', sortable: true },
+  { key: 'seasonNumber', label: 'Episode', sortable: true },
+  { key: 'plexDurationMin', label: 'Plex Duration', sortable: true },
+  { key: 'reason', label: 'Reason' },
+  { key: 'links', label: 'Links', width: '5rem' },
+]
 
 async function redownload() {
   const payload = selectedEpisodes.value.map((ep) => ({

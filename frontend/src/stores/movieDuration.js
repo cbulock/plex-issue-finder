@@ -51,7 +51,7 @@ export const useMovieDurationStore = defineStore('movieDuration', () => {
     try {
       const data = await apiGet(`/api/movies/check${force ? '?force=true' : ''}`)
       // markRaw prevents Vue from making the large result arrays deeply reactive,
-      // which would cause PrimeVue DataTable's internal sorting to trigger infinite update loops.
+      // which keeps the table views from doing unnecessary work on large result sets.
       result.value = markRaw(data)
       lastRun.value = new Date()
       saveToStorage(data, lastRun.value)

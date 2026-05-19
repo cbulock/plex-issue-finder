@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from './AppIcon.vue'
+
 const navGroups = [
   {
     label: 'Workspace',
@@ -38,7 +40,7 @@ const navGroups = [
             class="app-nav__item"
             exact-active-class="app-nav__item--active"
           >
-            <i :class="`pi ${item.icon}`" />
+            <AppIcon :name="item.icon" :size="18" />
             <span class="app-nav__item-label">{{ item.label }}</span>
           </router-link>
         </nav>
@@ -141,9 +143,8 @@ const navGroups = [
   color: var(--accent);
 }
 
-.app-nav__item i {
+.app-nav__item :deep(cindor-icon) {
   color: var(--fg-subtle);
-  font-size: var(--text-sm);
 }
 
 .app-nav__item--active {
@@ -152,7 +153,7 @@ const navGroups = [
   color: var(--fg);
 }
 
-.app-nav__item--active i {
+.app-nav__item--active :deep(cindor-icon) {
   color: var(--accent);
 }
 

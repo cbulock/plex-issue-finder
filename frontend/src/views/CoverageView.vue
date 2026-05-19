@@ -3,94 +3,74 @@
     <div class="page-header">
       <div>
         <p>
-          Movies in Plex that have no matching entry in Radarr — they won't receive quality upgrades or monitoring.
+          Movies in Plex that have no matching entry in Radarr - they won't receive quality upgrades or monitoring.
           <span v-if="lastRunLabel" class="last-run">{{ lastRunLabel }}</span>
         </p>
       </div>
       <div class="header-actions">
-        <Button
-          label="Run Check"
-          icon="pi pi-play"
-          :loading="loading"
-          @click="store.runCheck()"
-        />
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
+          <span class="button-content">
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
+          </span>
+        </CindorButton>
       </div>
     </div>
 
-    <Message v-if="error" severity="error" :closable="false" style="margin-bottom: 1rem">
+    <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
-    </Message>
+    </CindorAlert>
 
-    <!-- Summary cards -->
     <div v-if="result" class="summary-row">
-      <div class="summary-card summary-total">
-        <div class="summary-num">{{ result.summary.total }}</div>
-        <div class="summary-label">Total Movies</div>
-      </div>
-      <div class="summary-card summary-flagged">
-        <div class="summary-num">{{ result.summary.unmanaged }}</div>
-        <div class="summary-label">Unmanaged</div>
-      </div>
-      <div class="summary-card summary-ok">
-        <div class="summary-num">{{ result.summary.total - result.summary.unmanaged }}</div>
-        <div class="summary-label">In Radarr</div>
-      </div>
+      <CindorStatCard label="Total Movies" :value="String(result.summary.total)" tone="neutral" />
+      <CindorStatCard label="Unmanaged" :value="String(result.summary.unmanaged)" tone="negative" />
+      <CindorStatCard label="In Radarr" :value="String(result.summary.total - result.summary.unmanaged)" tone="positive" />
     </div>
 
-    <!-- Unmanaged table -->
     <div v-if="result && result.unmanaged.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-circle" style="color: var(--accent)" />
+        <AppIcon name="pi-exclamation-circle" :size="18" />
         Unmanaged Movies ({{ result.unmanaged.length }})
       </h2>
-      <DataTable
-        :value="result.unmanaged"
-        :paginator="result.unmanaged.length > 25"
-        :rows="25"
-        striped-rows
-        size="small"
+      <AppDataTable
+        :columns="tableColumns"
+        :rows="result.unmanaged"
+        empty-message="No unmanaged movies."
+        row-key="plexRatingKey"
+        :rows-per-page="25"
       >
-        <Column field="title" header="Title" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span>{{ data.title }}</span>
-              <span class="movie-year">{{ data.year }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="sectionTitle" header="Library" sortable />
-        <Column field="reason" header="Reason" />
-        <Column header="Links" style="width: 80px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-title="{ row }">
+          <div class="title-cell">
+            <span>{{ row.title }}</span>
+            <span class="movie-year">{{ row.year }}</span>
+          </div>
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
     <div v-if="result && result.unmanaged.length === 0 && !loading" class="empty-state">
-      <i class="pi pi-check-circle" />
+      <AppIcon name="pi-check-circle" :size="42" />
       <p>All movies in Plex are managed by Radarr.</p>
     </div>
 
-    <!-- Loading -->
     <div v-if="loading" class="loading-state">
-      <ProgressSpinner style="width: 48px; height: 48px" />
-      <p>Comparing Plex library against Radarr…</p>
+      <CindorSpinner />
+      <p>Comparing Plex library against Radarr...</p>
     </div>
 
-    <!-- Idle -->
     <div v-if="!result && !loading" class="idle-state">
-      <i class="pi pi-search" />
+      <AppIcon name="pi-search" :size="42" />
       <p>Run a check to find movies in Plex that aren't tracked by Radarr.</p>
     </div>
   </div>
@@ -99,11 +79,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useCoverageStore } from '../stores/coverage'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
+import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import AppDataTable from '../components/AppDataTable.vue'
+import AppExternalLink from '../components/AppExternalLink.vue'
+import AppIcon from '../components/AppIcon.vue'
 
 const store = useCoverageStore()
 
@@ -113,6 +92,13 @@ const error = computed(() => store.error)
 
 const plexBaseUrl = computed(() => store.result?.summary?.plexUrl || '')
 const plexMachineId = computed(() => store.result?.summary?.plexMachineId || '')
+
+const tableColumns = [
+  { key: 'title', label: 'Title', sortable: true },
+  { key: 'sectionTitle', label: 'Library', sortable: true },
+  { key: 'reason', label: 'Reason' },
+  { key: 'links', label: 'Links', width: '5rem' },
+]
 
 const lastRunLabel = computed(() => {
   if (!store.lastRun) return null
@@ -132,4 +118,3 @@ function plexLink(ratingKey) {
   return `${plexBaseUrl.value}/web/index.html#!/server/${plexMachineId.value}/details?key=${key}`
 }
 </script>
-

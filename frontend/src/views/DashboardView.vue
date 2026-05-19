@@ -24,7 +24,7 @@
           class="feature-card"
         >
           <div class="feature-icon">
-            <i :class="`pi ${feature.icon}`" />
+            <AppIcon :name="feature.icon" :size="20" />
           </div>
           <div class="feature-body">
             <div class="feature-topline">
@@ -33,7 +33,7 @@
             </div>
             <p>{{ feature.description }}</p>
           </div>
-          <i class="pi pi-arrow-right feature-arrow" />
+          <AppIcon class="feature-arrow" name="pi-arrow-right" :size="16" />
         </router-link>
       </div>
     </section>
@@ -41,6 +41,8 @@
 </template>
 
 <script setup>
+import AppIcon from '../components/AppIcon.vue'
+
 const categories = [
   {
     title: 'Duration Checks',
@@ -171,7 +173,7 @@ const categories = [
   flex-shrink: 0;
 }
 
-.feature-icon i {
+.feature-icon :deep(cindor-icon) {
   font-size: 1.1rem;
   color: var(--accent);
 }
@@ -216,7 +218,6 @@ const categories = [
 
 .feature-arrow {
   color: var(--fg-subtle);
-  font-size: var(--text-sm);
   padding-top: 2px;
 }
 

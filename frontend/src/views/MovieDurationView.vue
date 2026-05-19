@@ -8,205 +8,157 @@
         </p>
       </div>
       <div class="header-actions">
-        <Button
-          label="Run Check"
-          icon="pi pi-play"
-          :loading="loading"
-          @click="store.runCheck(false)"
-        />
-        <Button
-          label="Force Refresh Cache"
-          icon="pi pi-refresh"
-          severity="secondary"
-          outlined
-          :loading="loading"
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck(false)">
+          <span class="button-content">
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
+          </span>
+        </CindorButton>
+        <CindorButton
+          type="button"
+          variant="ghost"
+          :disabled="loading"
+          title="Clears the Radarr runtime cache and re-fetches all runtimes"
           @click="store.runCheck(true)"
-          v-tooltip="'Clears the Radarr runtime cache and re-fetches all runtimes'"
-        />
+        >
+          <span class="button-content">
+            <AppIcon name="pi-refresh" :size="16" />
+            <span>Force Refresh Cache</span>
+          </span>
+        </CindorButton>
       </div>
     </div>
 
-    <Message v-if="error" severity="error" :closable="false" style="margin-bottom: 1rem">
+    <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
-    </Message>
+    </CindorAlert>
 
-    <!-- Summary cards -->
     <div v-if="result" class="summary-row">
-      <div class="summary-card summary-total">
-        <div class="summary-num">{{ result.summary.total }}</div>
-        <div class="summary-label">Total Movies</div>
-      </div>
-      <div class="summary-card summary-flagged">
-        <div class="summary-num">{{ result.summary.flagged }}</div>
-        <div class="summary-label">Flagged</div>
-      </div>
-      <div class="summary-card summary-ok">
-        <div class="summary-num">{{ result.summary.ok }}</div>
-        <div class="summary-label">OK</div>
-      </div>
-      <div class="summary-card summary-nomatch">
-        <div class="summary-num">{{ result.summary.noMatch }}</div>
-        <div class="summary-label">No Radarr Match</div>
-      </div>
-      <div class="summary-card summary-leeway">
-        <div class="summary-num">{{ result.summary.leewayPercent }}%</div>
-        <div class="summary-label">Tolerance</div>
-      </div>
-      <div class="summary-card summary-threshold">
-        <div class="summary-num">{{ result.summary.minDiffMinutes }}m</div>
-        <div class="summary-label">Min Diff</div>
-      </div>
+      <CindorStatCard label="Total Movies" :value="String(result.summary.total)" tone="neutral" />
+      <CindorStatCard label="Flagged" :value="String(result.summary.flagged)" tone="negative" />
+      <CindorStatCard label="OK" :value="String(result.summary.ok)" tone="positive" />
+      <CindorStatCard label="No Radarr Match" :value="String(result.summary.noMatch)" tone="neutral" />
+      <CindorStatCard label="Tolerance" :value="`${result.summary.leewayPercent}%`" tone="neutral" />
+      <CindorStatCard label="Min Diff" :value="`${result.summary.minDiffMinutes}m`" tone="neutral" />
     </div>
 
-    <!-- Flagged movies table -->
     <div v-if="result && result.flagged.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-exclamation-triangle" style="color: var(--accent)" />
+        <AppIcon name="pi-exclamation-triangle" :size="18" />
         Flagged Movies ({{ result.flagged.length }})
       </h2>
-      <!-- Bulk action toolbar -->
       <div v-if="selectedMovies.length > 0" class="bulk-toolbar">
         <span class="bulk-count">{{ selectedMovies.length }} selected</span>
-        <Button
-          label="Redownload"
-          icon="pi pi-refresh"
-          severity="warn"
-          size="small"
-          :loading="redownloading"
-          @click="redownload"
-        />
-        <Button
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          size="small"
-          title="Clear selection"
-          @click="selectedMovies = []"
-        />
+        <CindorButton type="button" variant="ghost" :disabled="redownloading" @click="redownload">
+          <span class="button-content">
+            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'pi-refresh'" :size="16" />
+            <span>{{ redownloading ? 'Queueing…' : 'Redownload' }}</span>
+          </span>
+        </CindorButton>
+        <CindorButton type="button" variant="ghost" @click="selectedMovies = []">
+          <span class="button-content">
+            <AppIcon name="pi-times" :size="16" />
+            <span>Clear</span>
+          </span>
+        </CindorButton>
       </div>
 
-      <DataTable
-        :value="result.flagged"
-        v-model:selection="selectedMovies"
-        selection-mode="multiple"
-        data-key="plexRatingKey"
-        :paginator="result.flagged.length > 20"
-        :rows="20"
-        class="flagged-table"
-        striped-rows
-        size="small"
+      <AppDataTable
+        :columns="flaggedColumns"
+        :rows="result.flagged"
+        row-key="plexRatingKey"
+        :rows-per-page="20"
+        selectable
+        :selected-rows="selectedMovies"
+        @update:selected-rows="selectedMovies = $event"
       >
-        <Column selection-mode="multiple" style="width: 3rem" />
-        <Column field="title" header="Title" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span class="movie-title">{{ data.title }}</span>
-              <span class="movie-year">{{ data.year }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="plexDurationMin" header="Plex Duration" sortable>
-          <template #body="{ data }">
-            {{ formatMinutes(data.plexDurationMin) }}
-          </template>
-        </Column>
-        <Column field="expectedDurationMin" header="Expected" sortable>
-          <template #body="{ data }">
-            {{ formatMinutes(data.expectedDurationMin) }}
-          </template>
-        </Column>
-        <Column field="diffPercent" header="Difference" sortable>
-          <template #body="{ data }">
-            <Tag
-              :value="`${data.diffPercent}%`"
-              :severity="data.diffPercent > 20 ? 'danger' : 'warn'"
-            />
-          </template>
-        </Column>
-        <Column header="Links" style="width: 110px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-              <a
-                v-if="data.radarrSlug && radarrBaseUrl"
-                :href="`${radarrBaseUrl}/movie/${data.radarrSlug}`"
-                target="_blank"
-                rel="noopener"
-                class="icon-link radarr-link"
-                data-tooltip="Open in Radarr"
-              ><i class="pi pi-video" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-title="{ row }">
+          <div class="title-cell">
+            <span class="movie-title">{{ row.title }}</span>
+            <span class="movie-year">{{ row.year }}</span>
+          </div>
+        </template>
+        <template #cell-plexDurationMin="{ row }">
+          {{ formatMinutes(row.plexDurationMin) }}
+        </template>
+        <template #cell-expectedDurationMin="{ row }">
+          {{ formatMinutes(row.expectedDurationMin) }}
+        </template>
+        <template #cell-diffPercent="{ row }">
+          <AppTag
+            :value="`${row.diffPercent}%`"
+            :severity="row.diffPercent > 20 ? 'danger' : 'warn'"
+          />
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            <AppExternalLink
+              v-if="row.radarrSlug && radarrBaseUrl"
+              :href="`${radarrBaseUrl}/movie/${row.radarrSlug}`"
+              class="icon-link radarr-link"
+              title="Open in Radarr"
+              aria-label="Open in Radarr"
+            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
     <div v-if="result && result.flagged.length === 0 && !loading" class="empty-state">
-      <i class="pi pi-check-circle" />
+      <AppIcon name="pi-check-circle" :size="42" />
       <p>No movies flagged! Differences stayed within the larger of {{ result.summary.leewayPercent }}% or {{ result.summary.minDiffMinutes }} minutes.</p>
     </div>
 
-    <!-- No Radarr match -->
     <div v-if="result && result.noMatch.length > 0" class="section">
       <h2 class="section-title">
-        <i class="pi pi-question-circle" style="color: var(--fg-subtle)" />
+        <AppIcon name="pi-question-circle" :size="18" />
         No Radarr Match ({{ result.noMatch.length }})
       </h2>
-      <DataTable
-        :value="result.noMatch"
-        :paginator="result.noMatch.length > 10"
-        :rows="10"
-        size="small"
-        striped-rows
+      <AppDataTable
+        :columns="noMatchColumns"
+        :rows="result.noMatch"
+        row-key="plexRatingKey"
+        :rows-per-page="10"
+        empty-message="No unmatched movies."
       >
-        <Column field="title" header="Title" sortable>
-          <template #body="{ data }">
-            <div class="title-cell">
-              <span class="movie-title">{{ data.title }}</span>
-              <span class="movie-year">{{ data.year }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column field="plexDurationMin" header="Plex Duration">
-          <template #body="{ data }">
-            {{ formatMinutes(data.plexDurationMin) }}
-          </template>
-        </Column>
-        <Column field="reason" header="Reason" />
-        <Column header="Links" style="width: 80px">
-          <template #body="{ data }">
-            <div class="link-buttons">
-              <a
-                v-if="data.plexRatingKey && plexMachineId"
-                :href="plexLink(data.plexRatingKey)"
-                target="_blank"
-                rel="noopener"
-                class="icon-link plex-link"
-                data-tooltip="Open in Plex"
-              ><i class="pi pi-play-circle" /></a>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+        <template #cell-title="{ row }">
+          <div class="title-cell">
+            <span class="movie-title">{{ row.title }}</span>
+            <span class="movie-year">{{ row.year }}</span>
+          </div>
+        </template>
+        <template #cell-plexDurationMin="{ row }">
+          {{ formatMinutes(row.plexDurationMin) }}
+        </template>
+        <template #cell-links="{ row }">
+          <div class="link-buttons">
+            <AppExternalLink
+              v-if="row.plexRatingKey && plexMachineId"
+              :href="plexLink(row.plexRatingKey)"
+              class="icon-link plex-link"
+              title="Open in Plex"
+              aria-label="Open in Plex"
+            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
-    <!-- Initial state -->
     <div v-if="!result && !loading" class="idle-state">
-      <i class="pi pi-clock" />
+      <AppIcon name="pi-clock" :size="42" />
       <p>Click <strong>Run Check</strong> to scan your Plex library for movies with unexpected durations.</p>
     </div>
 
-    <!-- Loading state -->
     <div v-if="loading" class="loading-state">
-      <ProgressSpinner />
-      <p>Fetching movie data from Plex and Radarr…</p>
+      <CindorSpinner />
+      <p>Fetching movie data from Plex and Radarr...</p>
     </div>
   </div>
 </template>
@@ -214,16 +166,15 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useMovieDurationStore } from '../stores/movieDuration'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
+import { useAppToast } from '../composables/useAppToast'
+import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import AppDataTable from '../components/AppDataTable.vue'
+import AppExternalLink from '../components/AppExternalLink.vue'
+import AppIcon from '../components/AppIcon.vue'
+import AppTag from '../components/AppTag.vue'
 
 const store = useMovieDurationStore()
-const toast = useToast()
+const toast = useAppToast()
 
 const result = computed(() => store.result)
 const loading = computed(() => store.loading)
@@ -236,6 +187,21 @@ const radarrBaseUrl = computed(() => store.result?.summary?.radarrUrl || '')
 
 const selectedMovies = ref([])
 const redownloading = ref(false)
+
+const flaggedColumns = [
+  { key: 'title', label: 'Title', sortable: true },
+  { key: 'plexDurationMin', label: 'Plex Duration', sortable: true },
+  { key: 'expectedDurationMin', label: 'Expected', sortable: true },
+  { key: 'diffPercent', label: 'Difference', sortable: true },
+  { key: 'links', label: 'Links', width: '7rem' },
+]
+
+const noMatchColumns = [
+  { key: 'title', label: 'Title', sortable: true },
+  { key: 'plexDurationMin', label: 'Plex Duration', sortable: true },
+  { key: 'reason', label: 'Reason' },
+  { key: 'links', label: 'Links', width: '5rem' },
+]
 
 async function redownload() {
   const ids = selectedMovies.value.map((m) => m.radarrId).filter(Boolean)
@@ -291,4 +257,3 @@ function plexLink(ratingKey) {
   return `${plexBaseUrl.value}/web/index.html#!/server/${plexMachineId.value}/details?key=${key}`
 }
 </script>
-

@@ -4,245 +4,257 @@
       <p>Configure your Plex, Radarr, and Sonarr connection details.</p>
     </div>
 
-    <form @submit.prevent="handleSave" class="settings-form">
-      <Card class="settings-card">
-        <template #title>
-          <span><i class="pi pi-play-circle" style="margin-right: 8px" />Plex Media Server</span>
-        </template>
-        <template #content>
-          <div class="field">
-            <label for="plex_url">Server URL</label>
-            <InputText
+    <CindorForm @submit="handleSave" class="settings-form">
+      <CindorCard class="settings-card">
+        <section class="settings-card-section">
+          <h2 class="settings-card-title"><AppIcon name="pi-play-circle" :size="18" />Plex Media Server</h2>
+          <CindorFormField
+            class="field"
+            label="Server URL"
+          >
+            <CindorUrlInput
               id="plex_url"
               v-model="form.plex_url"
               placeholder="http://192.168.1.x:32400"
               class="w-full"
             />
-            <small>Include protocol and port, e.g. http://192.168.1.50:32400</small>
-          </div>
-          <div class="field">
-            <label for="plex_token">API Token</label>
-            <Password
+            <CindorHelperText>Include protocol and port, e.g. http://192.168.1.50:32400</CindorHelperText>
+          </CindorFormField>
+          <CindorFormField
+            class="field"
+            label="API Token"
+          >
+            <CindorPasswordInput
               id="plex_token"
               v-model="form.plex_token"
-              :placeholder="store.settings.plex_token_set ? '(saved — enter to change)' : 'Your Plex token'"
-              :feedback="false"
-              toggle-mask
+              :placeholder="store.settings.plex_token_set ? '(saved - enter to change)' : 'Your Plex token'"
               class="w-full"
             />
-            <small>
+            <CindorHelperText>
               Find your token at
-              <a
+              <AppExternalLink
                 href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/"
-                target="_blank"
-                rel="noopener"
               >
                 support.plex.tv
-              </a>
-            </small>
-          </div>
-        </template>
-      </Card>
+              </AppExternalLink>
+            </CindorHelperText>
+          </CindorFormField>
+        </section>
+      </CindorCard>
 
-      <Card class="settings-card">
-        <template #title>
-          <span><i class="pi pi-database" style="margin-right: 8px" />Radarr</span>
-        </template>
-        <template #content>
-          <div class="field">
-            <label for="radarr_url">Server URL</label>
-            <InputText
+      <CindorCard class="settings-card">
+        <section class="settings-card-section">
+          <h2 class="settings-card-title"><AppIcon name="pi-database" :size="18" />Radarr</h2>
+          <CindorFormField
+            class="field"
+            label="Server URL"
+          >
+            <CindorUrlInput
               id="radarr_url"
               v-model="form.radarr_url"
               placeholder="http://192.168.1.x:7878"
               class="w-full"
             />
-          </div>
-          <div class="field">
-            <label for="radarr_api_key">API Key</label>
-            <Password
+          </CindorFormField>
+          <CindorFormField
+            class="field"
+            label="API Key"
+          >
+            <CindorPasswordInput
               id="radarr_api_key"
               v-model="form.radarr_api_key"
-              :placeholder="store.settings.radarr_api_key_set ? '(saved — enter to change)' : 'Your Radarr API key'"
-              :feedback="false"
-              toggle-mask
+              :placeholder="store.settings.radarr_api_key_set ? '(saved - enter to change)' : 'Your Radarr API key'"
               class="w-full"
             />
-            <small>Found in Radarr → Settings → General → Security</small>
-          </div>
-        </template>
-      </Card>
+            <CindorHelperText>Found in Radarr -> Settings -> General -> Security</CindorHelperText>
+          </CindorFormField>
+        </section>
+      </CindorCard>
 
-      <Card class="settings-card">
-        <template #title>
-          <span><i class="pi pi-list" style="margin-right: 8px" />Sonarr</span>
-        </template>
-        <template #content>
-          <div class="field">
-            <label for="sonarr_url">Server URL</label>
-            <InputText
+      <CindorCard class="settings-card">
+        <section class="settings-card-section">
+          <h2 class="settings-card-title"><AppIcon name="pi-list" :size="18" />Sonarr</h2>
+          <CindorFormField
+            class="field"
+            label="Server URL"
+          >
+            <CindorUrlInput
               id="sonarr_url"
               v-model="form.sonarr_url"
               placeholder="http://192.168.1.x:8989"
               class="w-full"
             />
-          </div>
-          <div class="field">
-            <label for="sonarr_api_key">API Key</label>
-            <Password
+          </CindorFormField>
+          <CindorFormField
+            class="field"
+            label="API Key"
+          >
+            <CindorPasswordInput
               id="sonarr_api_key"
               v-model="form.sonarr_api_key"
-              :placeholder="store.settings.sonarr_api_key_set ? '(saved — enter to change)' : 'Your Sonarr API key'"
-              :feedback="false"
-              toggle-mask
+              :placeholder="store.settings.sonarr_api_key_set ? '(saved - enter to change)' : 'Your Sonarr API key'"
               class="w-full"
             />
-            <small>Found in Sonarr → Settings → General → Security</small>
-          </div>
-        </template>
-      </Card>
+            <CindorHelperText>Found in Sonarr -> Settings -> General -> Security</CindorHelperText>
+          </CindorFormField>
+        </section>
+      </CindorCard>
 
-      <Card class="settings-card">
-        <template #title>
-          <span><i class="pi pi-th-large" style="margin-right: 8px" />Plex Libraries</span>
-        </template>
-        <template #content>
+      <CindorCard class="settings-card">
+        <section class="settings-card-section">
+          <h2 class="settings-card-title"><AppIcon name="pi-th-large" :size="18" />Plex Libraries</h2>
           <p class="field-hint">Select which Plex libraries to scan. Leave all unchecked to scan every movie library.</p>
           <div class="library-load-row">
-            <Button
-              label="Load Libraries"
-              icon="pi pi-sync"
-              severity="secondary"
-              outlined
-              size="small"
-              :loading="librariesLoading"
+            <CindorButton
+              type="button"
+              variant="ghost"
+              :disabled="librariesLoading"
               @click="loadLibraries"
-            />
-            <span v-if="libraryError" class="library-error">{{ libraryError }}</span>
+            >
+              <span class="button-content">
+                <AppIcon :name="librariesLoading ? 'loader-pinwheel' : 'pi-sync'" :size="16" />
+                <span>{{ librariesLoading ? 'Loading libraries…' : 'Load Libraries' }}</span>
+              </span>
+            </CindorButton>
           </div>
+          <CindorAlert v-if="libraryError" tone="danger" class="library-alert">
+            {{ libraryError }}
+          </CindorAlert>
           <div v-if="availableLibraries.length > 0" class="library-list">
             <div
               v-for="lib in availableLibraries"
               :key="lib.key"
               class="library-item"
             >
-              <Checkbox
-                :input-id="`lib-${lib.key}`"
-                :value="lib.key"
-                v-model="selectedLibraryIds"
+              <CindorCheckbox
+                :id="`lib-${lib.key}`"
+                :model-value="selectedLibraryIds.includes(lib.key)"
+                @update:model-value="setLibrarySelected(lib.key, $event)"
               />
-              <label :for="`lib-${lib.key}`" class="library-label">
+              <div class="library-label">
                 <span class="library-title">{{ lib.title }}</span>
                 <span class="library-meta">{{ lib.type }} · {{ lib.count }} items</span>
-              </label>
-              <Select
+              </div>
+              <CindorSelect
                 v-if="lib.type === 'movie'"
                 v-model="qualityThresholds[lib.key]"
-                :options="resolutionOptions"
-                option-label="label"
-                option-value="value"
-                size="small"
                 class="threshold-select"
-                placeholder="Min quality"
-              />
+              >
+                <CindorOption
+                  v-for="option in resolutionOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </CindorSelect>
             </div>
           </div>
           <p v-else-if="!librariesLoading" class="field-hint muted">
             Click "Load Libraries" to fetch available libraries from your Plex server.
           </p>
-        </template>
-      </Card>
+        </section>
+      </CindorCard>
 
-      <Card class="settings-card">
-        <template #title>
-          <span><i class="pi pi-sliders-h" style="margin-right: 8px" />Duration Tolerance</span>
-        </template>
-        <template #content>
-          <div class="field">
-            <label for="leeway">Leeway (%)</label>
+      <CindorCard class="settings-card">
+        <section class="settings-card-section">
+          <h2 class="settings-card-title"><AppIcon name="pi-sliders-h" :size="18" />Duration Tolerance</h2>
+          <CindorFormField
+            class="field"
+            label="Leeway (%)"
+          >
             <div class="leeway-row">
-              <Slider
+              <CindorRange
                 v-model="leewayNum"
                 :min="0"
                 :max="20"
                 :step="0.5"
                 class="leeway-slider"
               />
-              <InputNumber
+              <CindorNumberInput
                 id="leeway"
-                v-model="leewayNum"
-                :min="0"
-                :max="100"
-                :max-fraction-digits="1"
-                suffix="%"
+                v-model="leewayInput"
+                min="0"
+                max="100"
+                step="0.5"
                 class="leeway-input"
               />
             </div>
-            <small>
+            <CindorHelperText>
               Duration checks flag items only when the difference exceeds the percentage threshold and the minimum minute difference.
-            </small>
-          </div>
+            </CindorHelperText>
+          </CindorFormField>
           <div class="min-diff-grid">
-            <div class="field">
-              <label for="movie-min-diff">Movie minimum difference (minutes)</label>
-              <InputNumber
+            <CindorFormField
+              class="field"
+              label="Movie minimum difference (minutes)"
+            >
+              <CindorNumberInput
                 id="movie-min-diff"
-                v-model="movieMinDiffNum"
-                :min="0"
-                :max-fraction-digits="1"
-                suffix=" min"
+                v-model="movieMinDiffInput"
+                min="0"
+                step="0.5"
                 class="w-full"
               />
-              <small>
+              <CindorHelperText>
                 Default: 5 min. Movie checks use the larger of {{ leewayNum }}% or {{ movieMinDiffNum }} minutes.
-              </small>
-            </div>
-            <div class="field">
-              <label for="episode-min-diff">Episode minimum difference (minutes)</label>
-              <InputNumber
+              </CindorHelperText>
+            </CindorFormField>
+            <CindorFormField
+              class="field"
+              label="Episode minimum difference (minutes)"
+            >
+              <CindorNumberInput
                 id="episode-min-diff"
-                v-model="episodeMinDiffNum"
-                :min="0"
-                :max-fraction-digits="1"
-                suffix=" min"
+                v-model="episodeMinDiffInput"
+                min="0"
+                step="0.5"
                 class="w-full"
               />
-              <small>
+              <CindorHelperText>
                 Default: 3 min. Episode checks use the larger of {{ leewayNum }}% or {{ episodeMinDiffNum }} minutes.
-              </small>
-            </div>
+              </CindorHelperText>
+            </CindorFormField>
           </div>
-        </template>
-      </Card>
+        </section>
+      </CindorCard>
 
       <div class="form-actions">
-        <Button
-          type="submit"
-          label="Save Settings"
-          icon="pi pi-check"
-          :loading="store.loading"
-        />
+        <CindorButton type="submit" :disabled="store.loading">
+          <span class="button-content">
+            <AppIcon :name="store.loading ? 'loader-pinwheel' : 'pi-check'" :size="16" />
+            <span>{{ store.loading ? 'Saving…' : 'Save Settings' }}</span>
+          </span>
+        </CindorButton>
       </div>
-    </form>
+    </CindorForm>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useSettingsStore } from '../stores/settings'
+import { computed, onMounted, reactive, ref } from 'vue'
+import {
+  CindorAlert,
+  CindorButton,
+  CindorCard,
+  CindorCheckbox,
+  CindorForm,
+  CindorFormField,
+  CindorHelperText,
+  CindorNumberInput,
+  CindorOption,
+  CindorPasswordInput,
+  CindorRange,
+  CindorSelect,
+  CindorUrlInput,
+} from 'cindor-ui-vue'
 import { apiPost } from '../api/client'
-import { useToast } from 'primevue/usetoast'
-import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Slider from 'primevue/slider'
-import InputNumber from 'primevue/inputnumber'
-import Checkbox from 'primevue/checkbox'
-import Select from 'primevue/select'
+import AppExternalLink from '../components/AppExternalLink.vue'
+import AppIcon from '../components/AppIcon.vue'
+import { useAppToast } from '../composables/useAppToast'
+import { useSettingsStore } from '../stores/settings'
 
 const store = useSettingsStore()
-const toast = useToast()
+const toast = useAppToast()
 
 const resolutionOptions = [
   { label: '480p', value: '480p' },
@@ -264,10 +276,33 @@ const leewayNum = ref(5)
 const movieMinDiffNum = ref(5)
 const episodeMinDiffNum = ref(3)
 
-// Library selection
+const leewayInput = computed({
+  get: () => String(leewayNum.value ?? ''),
+  set: (value) => {
+    const parsed = Number.parseFloat(value)
+    leewayNum.value = Number.isFinite(parsed) ? parsed : 0
+  },
+})
+
+const movieMinDiffInput = computed({
+  get: () => String(movieMinDiffNum.value ?? ''),
+  set: (value) => {
+    const parsed = Number.parseFloat(value)
+    movieMinDiffNum.value = Number.isFinite(parsed) ? parsed : 0
+  },
+})
+
+const episodeMinDiffInput = computed({
+  get: () => String(episodeMinDiffNum.value ?? ''),
+  set: (value) => {
+    const parsed = Number.parseFloat(value)
+    episodeMinDiffNum.value = Number.isFinite(parsed) ? parsed : 0
+  },
+})
+
 const availableLibraries = ref([])
-const selectedLibraryIds = ref([])  // array of string keys
-const qualityThresholds = reactive({}) // sectionKey -> resolution string
+const selectedLibraryIds = ref([])
+const qualityThresholds = reactive({})
 const librariesLoading = ref(false)
 const libraryError = ref('')
 
@@ -280,15 +315,15 @@ onMounted(async () => {
   movieMinDiffNum.value = parseFloat(store.settings.movie_min_diff_min) || 5
   episodeMinDiffNum.value = parseFloat(store.settings.episode_min_diff_min) || 3
 
-  // Restore saved library selection
   const savedIds = store.settings.plex_library_ids || ''
   selectedLibraryIds.value = savedIds ? savedIds.split(',').map((s) => s.trim()).filter(Boolean) : []
 
-  // Restore saved quality thresholds
   try {
     const saved = JSON.parse(store.settings.quality_thresholds || '{}')
     Object.assign(qualityThresholds, saved)
-  } catch { /* ignore */ }
+  } catch {
+    // Ignore invalid persisted thresholds and keep defaults.
+  }
 })
 
 async function loadLibraries() {
@@ -300,7 +335,6 @@ async function loadLibraries() {
     if (form.value.plex_token) body.plex_token = form.value.plex_token
     const data = await apiPost('/api/plex/libraries', body)
     availableLibraries.value = data
-    // Default any new movie library to 1080p if not already set
     for (const lib of data) {
       if (lib.type === 'movie' && !qualityThresholds[lib.key]) {
         qualityThresholds[lib.key] = '1080p'
@@ -311,6 +345,17 @@ async function loadLibraries() {
   } finally {
     librariesLoading.value = false
   }
+}
+
+function setLibrarySelected(key, checked) {
+  if (checked) {
+    if (!selectedLibraryIds.value.includes(key)) {
+      selectedLibraryIds.value = [...selectedLibraryIds.value, key]
+    }
+    return
+  }
+
+  selectedLibraryIds.value = selectedLibraryIds.value.filter((id) => id !== key)
 }
 
 async function handleSave() {
@@ -324,6 +369,7 @@ async function handleSave() {
     plex_library_ids: selectedLibraryIds.value.join(','),
     quality_thresholds: JSON.stringify(qualityThresholds),
   }
+
   if (form.value.plex_token) payload.plex_token = form.value.plex_token
   if (form.value.radarr_api_key) payload.radarr_api_key = form.value.radarr_api_key
   if (form.value.sonarr_api_key) payload.sonarr_api_key = form.value.sonarr_api_key
@@ -355,6 +401,18 @@ async function handleSave() {
   width: 100%;
 }
 
+.settings-card-section {
+  padding: var(--space-4);
+}
+
+.settings-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-md);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -364,20 +422,6 @@ async function handleSave() {
 
 .field:last-child {
   margin-bottom: 0;
-}
-
-.field label {
-  font-weight: var(--weight-medium);
-  font-size: var(--text-sm);
-}
-
-.field small {
-  color: var(--fg-muted);
-  font-size: var(--text-sm);
-}
-
-.field small a {
-  color: var(--accent);
 }
 
 .w-full {
@@ -399,10 +443,6 @@ async function handleSave() {
 .leeway-input {
   width: 96px;
   flex: 0 0 96px;
-}
-
-.leeway-input :deep(.p-inputtext) {
-  width: 100%;
 }
 
 .min-diff-grid {
@@ -451,9 +491,8 @@ async function handleSave() {
   flex-wrap: wrap;
 }
 
-.library-error {
-  color: var(--danger);
-  font-size: var(--text-sm);
+.library-alert {
+  margin-bottom: var(--space-3);
 }
 
 .library-list {
@@ -481,7 +520,6 @@ async function handleSave() {
 .library-label {
   display: flex;
   flex-direction: column;
-  cursor: pointer;
   gap: 2px;
   min-width: 0;
 }
@@ -497,17 +535,5 @@ async function handleSave() {
   font-family: var(--font-mono);
   text-transform: capitalize;
   letter-spacing: 0.04em;
-}
-
-:deep(.settings-card .p-card-caption) {
-  display: flex;
-  align-items: center;
-  min-height: 24px;
-}
-
-:deep(.settings-card .p-card-title span) {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 </style>
