@@ -15,7 +15,7 @@ const navGroups = [
       { to: '/movies/duration', icon: 'pi-clock', label: 'Movie duration' },
       { to: '/movies/quality', icon: 'pi-video', label: 'Video quality' },
       { to: '/coverage', icon: 'pi-search', label: 'Unmanaged movies' },
-      { to: '/sonarr/duration', icon: 'pi-stopwatch', label: 'Episode duration' },
+      { to: '/sonarr/duration', icon: 'pi-clock', label: 'Episode duration' },
       { to: '/sonarr/monitoring', icon: 'pi-list', label: 'Unmonitored episodes' },
     ],
   },

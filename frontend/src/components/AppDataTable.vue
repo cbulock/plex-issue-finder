@@ -36,6 +36,10 @@ const props = defineProps({
     type: Number,
     default: 20,
   },
+  density: {
+    type: String,
+    default: 'comfortable',
+  },
   selectable: {
     type: Boolean,
     default: false,
@@ -199,6 +203,7 @@ function slotName(prefix, row) {
     <CindorDataTable
       :columns="tableColumns"
       :current-page="currentPage"
+      :density="density"
       :empty-message="emptyMessage"
       :expandable-rows="expandable"
       :expanded-row-ids="expandedRowIds"
@@ -274,6 +279,10 @@ function slotName(prefix, row) {
   display: block;
   min-width: 0;
   max-width: 100%;
+}
+
+.app-data-table :deep([part~="surface"]) {
+  overflow: hidden;
 }
 
 .app-data-table :deep([part~="row-toggle-button"]) {

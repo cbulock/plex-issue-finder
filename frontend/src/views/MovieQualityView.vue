@@ -52,6 +52,7 @@
 
       <AppDataTable
         :columns="flaggedColumns"
+        density="compact"
         :rows="flaggedRows"
         row-key="plexRatingKey"
         :rows-per-page="20"
@@ -123,6 +124,7 @@
 
       <AppDataTable
         :columns="flaggedColumns"
+        density="compact"
         :rows="overThresholdRows"
         row-key="plexRatingKey"
         :rows-per-page="20"
@@ -213,13 +215,13 @@ const redownloading = ref(false)
 const downgrading = ref(false)
 
 const flaggedColumns = [
-  { key: 'title', label: 'Title', sortable: true },
-  { key: 'sectionTitle', label: 'Library', sortable: true },
-  { key: 'videoResolution', label: 'Resolution', sortable: true },
-  { key: 'videoCodec', label: 'Codec', sortable: true },
-  { key: 'audioChannels', label: 'Audio', sortable: true },
-  { key: 'threshold', label: 'Threshold' },
-  { key: 'links', label: 'Links', width: '7rem' },
+  { key: 'title', label: 'Title', sortable: true, minWidth: '12rem', priority: 1 },
+  { key: 'sectionTitle', label: 'Library', sortable: true, minWidth: '8rem', truncate: true, priority: 1 },
+  { key: 'videoResolution', label: 'Resolution', sortable: true, minWidth: '6.5rem', width: '6.5rem', priority: 1 },
+  { key: 'videoCodec', label: 'Codec', sortable: true, minWidth: '6rem', width: '6rem', truncate: true, priority: 3 },
+  { key: 'audioChannels', label: 'Audio', sortable: true, minWidth: '7rem', width: '7rem', truncate: true, priority: 2 },
+  { key: 'threshold', label: 'Threshold', minWidth: '6.5rem', width: '6.5rem', priority: 2 },
+  { key: 'links', label: 'Links', minWidth: '5rem', width: '5rem', priority: 1 },
 ]
 
 const lastRunLabel = computed(() => {
@@ -338,5 +340,25 @@ async function downgradeSelected() {
 <style scoped>
 .section-note {
   margin-block-end: var(--space-3);
+}
+
+.title-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title-cell > :first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-buttons {
+  justify-content: center;
+  flex-wrap: nowrap;
 }
 </style>

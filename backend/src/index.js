@@ -23,8 +23,20 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Serve Vue frontend (production build)
 const distPath = path.join(__dirname, '../../frontend/dist');
-app.use(express.static(distPath));
+app.use(express.static(distPath, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-store');
+      return;
+    }
+
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
 app.get('/{*splat}', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 
+const CHUNK_RELOAD_KEY = 'plex-issue-finder:chunk-reload-target'
+
+function isDynamicImportError(error) {
+  const message = error instanceof Error ? error.message : String(error || '')
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(message)
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -68,6 +75,27 @@ const router = createRouter({
       },
     },
   ],
+})
+
+router.onError((error, to) => {
+  if (!isDynamicImportError(error)) {
+    return
+  }
+
+  const reloadTarget = to?.fullPath || window.location.pathname || '/'
+  const previousTarget = sessionStorage.getItem(CHUNK_RELOAD_KEY)
+
+  if (previousTarget === reloadTarget) {
+    sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+    return
+  }
+
+  sessionStorage.setItem(CHUNK_RELOAD_KEY, reloadTarget)
+  window.location.assign(reloadTarget)
+})
+
+router.afterEach(() => {
+  sessionStorage.removeItem(CHUNK_RELOAD_KEY)
 })
 
 export default router
