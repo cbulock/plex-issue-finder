@@ -1,7 +1,7 @@
 <script setup>
 import { CindorIcon } from 'cindor-ui-vue'
 
-const props = defineProps({
+defineProps({
   label: {
     type: String,
     default: '',
@@ -19,7 +19,6 @@ const props = defineProps({
     default: 2,
   },
 })
-
 </script>
 
 <template>
