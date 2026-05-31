@@ -49,7 +49,7 @@ watch(
         class="app-nav-mobile-toggle"
         :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
         aria-controls="app-mobile-nav-drawer"
-        aria-label="Open navigation menu"
+        :aria-label="mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'"
         @click="mobileMenuOpen = !mobileMenuOpen"
       >
         <AppIcon :name="mobileMenuOpen ? 'pi-times' : 'pi-bars'" :size="18" />

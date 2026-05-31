@@ -39,6 +39,7 @@ const PRIME_TO_CINDOR_ICON = {
   'pi-check-circle': 'circle-check',
   'pi-play': 'play',
   'pi-refresh': 'refresh-cw',
+  'pi-bars': 'menu',
   'pi-times': 'x',
   'pi-exclamation-circle': 'triangle-alert',
   'pi-exclamation-triangle': 'triangle-alert',
