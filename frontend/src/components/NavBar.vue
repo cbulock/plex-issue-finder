@@ -5,18 +5,18 @@ const navGroups = [
   {
     label: 'Workspace',
     items: [
-      { to: '/', icon: 'pi-home', label: 'Dashboard' },
-      { to: '/settings', icon: 'pi-cog', label: 'Settings' },
+      { to: '/', icon: 'home', label: 'Dashboard' },
+      { to: '/settings', icon: 'settings', label: 'Settings' },
     ],
   },
   {
     label: 'Diagnostics',
     items: [
-      { to: '/movies/duration', icon: 'pi-clock', label: 'Movie duration' },
-      { to: '/movies/quality', icon: 'pi-video', label: 'Video quality' },
-      { to: '/coverage', icon: 'pi-search', label: 'Unmanaged movies' },
-      { to: '/sonarr/duration', icon: 'pi-clock', label: 'Episode duration' },
-      { to: '/sonarr/monitoring', icon: 'pi-list', label: 'Unmonitored episodes' },
+      { to: '/movies/duration', icon: 'clock', label: 'Movie duration' },
+      { to: '/movies/quality', icon: 'video', label: 'Video quality' },
+      { to: '/coverage', icon: 'search', label: 'Unmanaged movies' },
+      { to: '/sonarr/duration', icon: 'clock', label: 'Episode duration' },
+      { to: '/sonarr/monitoring', icon: 'list', label: 'Unmonitored episodes' },
     ],
   },
 ]

@@ -33,7 +33,7 @@
             </div>
             <p>{{ feature.description }}</p>
           </div>
-          <AppIcon class="feature-arrow" name="pi-arrow-right" :size="16" />
+          <AppIcon class="feature-arrow" name="arrow-right" :size="16" />
         </router-link>
       </div>
     </section>
@@ -51,7 +51,7 @@ const categories = [
     features: [
       {
         route: '/movies/duration',
-        icon: 'pi-clock',
+        icon: 'clock',
         title: 'Movie Duration Check',
         scope: 'Movies',
         description:
@@ -59,7 +59,7 @@ const categories = [
       },
       {
         route: '/sonarr/duration',
-        icon: 'pi-clock',
+        icon: 'clock',
         title: 'Episode Duration Check',
         scope: 'TV',
         description:
@@ -74,7 +74,7 @@ const categories = [
     features: [
       {
         route: '/movies/quality',
-        icon: 'pi-video',
+        icon: 'video',
         title: 'Video Quality Check',
         scope: 'Movies',
         description:
@@ -82,7 +82,7 @@ const categories = [
       },
       {
         route: '/coverage',
-        icon: 'pi-search',
+        icon: 'search',
         title: 'Unmanaged Movies',
         scope: 'Movies',
         description:
@@ -97,7 +97,7 @@ const categories = [
     features: [
       {
         route: '/sonarr/monitoring',
-        icon: 'pi-list',
+        icon: 'list',
         title: 'Unmonitored Episodes',
         scope: 'TV',
         description:

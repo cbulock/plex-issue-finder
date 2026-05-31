@@ -10,7 +10,7 @@
       <div class="header-actions">
         <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
           <span class="button-content">
-            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
           </span>
         </CindorButton>
@@ -30,7 +30,7 @@
 
     <div v-if="result && result.results.length > 0" class="section">
       <h2 class="section-title">
-        <AppIcon name="pi-exclamation-circle" :size="18" />
+        <AppIcon name="triangle-alert" :size="18" />
         Series with Unmonitored Content ({{ result.results.length }})
       </h2>
 
@@ -38,13 +38,13 @@
         <span class="bulk-count">{{ selectedSeries.length }} selected</span>
         <CindorButton type="button" variant="ghost" :disabled="monitoring" @click="monitorSelected">
           <span class="button-content">
-            <AppIcon :name="monitoring ? 'loader-pinwheel' : 'pi-eye'" :size="16" />
+            <AppIcon :name="monitoring ? 'loader-pinwheel' : 'eye'" :size="16" />
             <span>{{ monitoring ? 'Updating…' : 'Monitor All Selected' }}</span>
           </span>
         </CindorButton>
         <CindorButton type="button" variant="ghost" @click="selectedSeries = []">
           <span class="button-content">
-            <AppIcon name="pi-times" :size="16" />
+            <AppIcon name="x" :size="16" />
             <span>Clear</span>
           </span>
         </CindorButton>
@@ -100,7 +100,7 @@
               class="icon-link sonarr-link"
               title="Open in Sonarr"
               aria-label="Open in Sonarr"
-            ><AppIcon name="pi-external-link" :size="16" /></AppExternalLink>
+            ><AppIcon name="external-link" :size="16" /></AppExternalLink>
           </div>
         </template>
         <template #expanded="{ row: series }">
@@ -133,7 +133,7 @@
                 </template>
                 <template #cell-hasFile="{ row: ep }">
                   <AppIcon
-                    :name="ep.hasFile ? 'pi-check' : 'pi-times'"
+                    :name="ep.hasFile ? 'check' : 'x'"
                     :size="16"
                     :style="{ color: ep.hasFile ? 'var(--success)' : 'var(--danger)' }"
                   />
@@ -145,7 +145,7 @@
                     class="icon-link sonarr-link"
                     title="Open in Sonarr"
                     aria-label="Open in Sonarr"
-                  ><AppIcon name="pi-external-link" :size="16" /></AppExternalLink>
+                  ><AppIcon name="external-link" :size="16" /></AppExternalLink>
                 </template>
               </AppDataTable>
             </div>
@@ -155,7 +155,7 @@
     </div>
 
     <div v-if="result && result.results.length === 0 && !loading" class="empty-state">
-      <AppIcon name="pi-check-circle" :size="42" />
+      <AppIcon name="circle-check" :size="42" />
       <p>All monitored series have fully monitored seasons and episodes.</p>
     </div>
 
@@ -165,7 +165,7 @@
     </div>
 
     <div v-if="!result && !loading" class="idle-state">
-      <AppIcon name="pi-list" :size="42" />
+      <AppIcon name="list" :size="42" />
       <p>Run a check to find shows with unmonitored seasons or episodes in Sonarr.</p>
     </div>
   </div>

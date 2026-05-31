@@ -10,7 +10,7 @@
       <div class="header-actions">
         <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
           <span class="button-content">
-            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
           </span>
         </CindorButton>
@@ -29,7 +29,7 @@
 
     <div v-if="result && result.unmanaged.length > 0" class="section">
       <h2 class="section-title">
-        <AppIcon name="pi-exclamation-circle" :size="18" />
+        <AppIcon name="triangle-alert" :size="18" />
         Unmanaged Movies ({{ result.unmanaged.length }})
       </h2>
       <AppDataTable
@@ -53,14 +53,14 @@
               class="icon-link plex-link"
               title="Open in Plex"
               aria-label="Open in Plex"
-            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            ><AppIcon name="circle-play" :size="16" /></AppExternalLink>
           </div>
         </template>
       </AppDataTable>
     </div>
 
     <div v-if="result && result.unmanaged.length === 0 && !loading" class="empty-state">
-      <AppIcon name="pi-check-circle" :size="42" />
+      <AppIcon name="circle-check" :size="42" />
       <p>All movies in Plex are managed by Radarr.</p>
     </div>
 
@@ -70,7 +70,7 @@
     </div>
 
     <div v-if="!result && !loading" class="idle-state">
-      <AppIcon name="pi-search" :size="42" />
+      <AppIcon name="search" :size="42" />
       <p>Run a check to find movies in Plex that aren't tracked by Radarr.</p>
     </div>
   </div>

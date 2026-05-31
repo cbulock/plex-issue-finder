@@ -7,7 +7,7 @@
     <CindorForm class="settings-form" :submitting="store.loading" @submit="handleSave">
       <CindorCard class="settings-card">
         <section class="settings-card-section">
-          <h2 class="settings-card-title"><AppIcon name="pi-play-circle" :size="18" />Plex Media Server</h2>
+          <h2 class="settings-card-title"><AppIcon name="circle-play" :size="18" />Plex Media Server</h2>
           <CindorFormField
             class="field"
             label="Server URL"
@@ -44,7 +44,7 @@
 
       <CindorCard class="settings-card">
         <section class="settings-card-section">
-          <h2 class="settings-card-title"><AppIcon name="pi-database" :size="18" />Radarr</h2>
+          <h2 class="settings-card-title"><AppIcon name="database" :size="18" />Radarr</h2>
           <CindorFormField
             class="field"
             label="Server URL"
@@ -73,7 +73,7 @@
 
       <CindorCard class="settings-card">
         <section class="settings-card-section">
-          <h2 class="settings-card-title"><AppIcon name="pi-list" :size="18" />Sonarr</h2>
+          <h2 class="settings-card-title"><AppIcon name="list" :size="18" />Sonarr</h2>
           <CindorFormField
             class="field"
             label="Server URL"
@@ -102,7 +102,7 @@
 
       <CindorCard class="settings-card">
         <section class="settings-card-section">
-          <h2 class="settings-card-title"><AppIcon name="pi-th-large" :size="18" />Plex Libraries</h2>
+          <h2 class="settings-card-title"><AppIcon name="layout-grid" :size="18" />Plex Libraries</h2>
           <p class="field-hint">Select which Plex libraries to scan. Leave all unchecked to scan every movie library.</p>
           <div class="library-load-row">
             <CindorButton
@@ -112,7 +112,7 @@
               @click="loadLibraries"
             >
               <span class="button-content">
-                <AppIcon :name="librariesLoading ? 'loader-pinwheel' : 'pi-sync'" :size="16" />
+                <AppIcon :name="librariesLoading ? 'loader-pinwheel' : 'refresh-cw'" :size="16" />
                 <span>{{ librariesLoading ? 'Loading libraries…' : 'Load Libraries' }}</span>
               </span>
             </CindorButton>
@@ -157,7 +157,7 @@
 
       <CindorCard class="settings-card">
         <section class="settings-card-section">
-          <h2 class="settings-card-title"><AppIcon name="pi-sliders-h" :size="18" />Duration Tolerance</h2>
+          <h2 class="settings-card-title"><AppIcon name="sliders-horizontal" :size="18" />Duration Tolerance</h2>
           <CindorFormField
             class="field"
             label="Leeway (%)"
@@ -221,7 +221,7 @@
       <div class="form-actions">
         <CindorButton type="submit" :disabled="store.loading">
           <span class="button-content">
-            <AppIcon :name="store.loading ? 'loader-pinwheel' : 'pi-check'" :size="16" />
+            <AppIcon :name="store.loading ? 'loader-pinwheel' : 'check'" :size="16" />
             <span>{{ store.loading ? 'Saving…' : 'Save Settings' }}</span>
           </span>
         </CindorButton>
