@@ -1,39 +1,87 @@
 <template>
   <div class="dashboard app-page">
     <div class="page-header">
-      <p>Select a tool to diagnose and fix your Plex library.</p>
+      <div>
+        <p>Check setup health, review the latest saved scan snapshots, and jump back into the diagnostics that need attention.</p>
+      </div>
+      <div class="header-actions">
+        <router-link to="/settings" class="dashboard-link-card dashboard-link-card--compact">
+          <AppIcon name="settings" :size="16" />
+          <span>Open Settings</span>
+        </router-link>
+      </div>
     </div>
 
-    <section
-      v-for="category in categories"
-      :key="category.title"
-      class="category-section"
-    >
-      <div class="category-header">
+    <section class="dashboard-section">
+      <div class="dashboard-section__header">
         <div>
-          <h2>{{ category.title }}</h2>
-          <p>{{ category.description }}</p>
+          <h2>Setup Status</h2>
+          <p>Quick check that Plex, Radarr, and Sonarr are configured well enough to run the diagnostic tools.</p>
+        </div>
+        <AppTag :value="`${configuredServiceCount}/3 connected`" :severity="configuredServiceCount === 3 ? 'success' : 'warn'" />
+      </div>
+
+      <div class="setup-grid">
+        <article
+          v-for="service in serviceStatus"
+          :key="service.name"
+          class="setup-card"
+        >
+          <div class="setup-card__topline">
+            <div class="setup-card__title">
+              <AppIcon :name="service.icon" :size="18" />
+              <h3>{{ service.name }}</h3>
+            </div>
+            <AppTag :value="service.connected ? 'Ready' : 'Needs setup'" :severity="service.connected ? 'success' : 'warn'" />
+          </div>
+          <p>{{ service.description }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-section">
+      <div class="dashboard-section__header">
+        <div>
+          <h2>Recent Scan Snapshots</h2>
+          <p>These cards reflect the most recent saved results from this browser session, so you can see where things stood last time you ran a check.</p>
         </div>
       </div>
 
-      <div class="feature-grid">
+      <div class="snapshot-grid">
         <router-link
-          v-for="feature in category.features"
-          :key="feature.route"
-          :to="feature.route"
-          class="feature-card"
+          v-for="snapshot in snapshots"
+          :key="snapshot.route"
+          :to="snapshot.route"
+          class="dashboard-link-card"
         >
-          <div class="feature-icon">
-            <AppIcon :name="feature.icon" :size="20" />
-          </div>
-          <div class="feature-body">
-            <div class="feature-topline">
-              <h3>{{ feature.title }}</h3>
-              <span class="feature-scope">{{ feature.scope }}</span>
+          <div class="snapshot-card__topline">
+            <div class="snapshot-card__title">
+              <div class="snapshot-card__icon">
+                <AppIcon :name="snapshot.icon" :size="18" />
+              </div>
+              <div>
+                <h3>{{ snapshot.title }}</h3>
+                <p>{{ snapshot.description }}</p>
+              </div>
             </div>
-            <p>{{ feature.description }}</p>
+            <AppIcon class="snapshot-card__arrow" name="arrow-right" :size="16" />
           </div>
-          <AppIcon class="feature-arrow" name="arrow-right" :size="16" />
+
+          <div class="snapshot-card__meta">
+            <AppTag :value="snapshot.statusLabel" :severity="snapshot.statusSeverity" />
+            <span class="snapshot-card__time">{{ snapshot.lastRunLabel }}</span>
+          </div>
+
+          <div class="snapshot-card__stats">
+            <div
+              v-for="stat in snapshot.stats"
+              :key="stat.label"
+              class="snapshot-stat"
+            >
+              <span class="snapshot-stat__label">{{ stat.label }}</span>
+              <strong class="snapshot-stat__value">{{ stat.value }}</strong>
+            </div>
+          </div>
         </router-link>
       </div>
     </section>
@@ -41,71 +89,160 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
+import AppTag from '../components/AppTag.vue'
+import { useCoverageStore } from '../stores/coverage'
+import { useEpisodeDurationStore } from '../stores/episodeDuration'
+import { useMovieDurationStore } from '../stores/movieDuration'
+import { useMovieQualityStore } from '../stores/movieQuality'
+import { useSettingsStore } from '../stores/settings'
+import { useSonarrMonitoringStore } from '../stores/sonarrMonitoring'
 
-const categories = [
+const settingsStore = useSettingsStore()
+const movieDurationStore = useMovieDurationStore()
+const movieQualityStore = useMovieQualityStore()
+const coverageStore = useCoverageStore()
+const episodeDurationStore = useEpisodeDurationStore()
+const sonarrMonitoringStore = useSonarrMonitoringStore()
+
+onMounted(() => {
+  if (!settingsStore.settings.plex_url && !settingsStore.settings.radarr_url && !settingsStore.settings.sonarr_url) {
+    settingsStore.fetchSettings()
+  }
+})
+
+const serviceStatus = computed(() => [
   {
-    title: 'Duration Checks',
-    description:
-      'Compare Plex runtimes against Radarr and Sonarr expectations to catch incomplete or mismatched files.',
-    features: [
-      {
-        route: '/movies/duration',
-        icon: 'clock',
-        title: 'Movie Duration Check',
-        scope: 'Movies',
-        description:
-          'Compare actual movie durations in Plex against expected runtimes from Radarr. Flag movies that appear to be incomplete downloads.',
-      },
-      {
-        route: '/sonarr/duration',
-        icon: 'clock',
-        title: 'Episode Duration Check',
-        scope: 'TV',
-        description:
-          'Compare actual TV episode durations in Plex against expected runtimes from Sonarr. Flag episodes that appear to be incomplete downloads.',
-      },
-    ],
+    name: 'Plex',
+    icon: 'circle-play',
+    connected: Boolean(settingsStore.settings.plex_url && settingsStore.settings.plex_token_set),
+    description: settingsStore.settings.plex_url
+      ? 'Server URL saved. Token is ready for library and runtime scans.'
+      : 'Add your Plex server URL and token to unlock library-aware checks.',
   },
   {
-    title: 'Movie Library Checks',
-    description:
-      'Review movie quality and coverage issues that affect upgrades, monitoring, and overall library health.',
-    features: [
-      {
-        route: '/movies/quality',
-        icon: 'video',
-        title: 'Video Quality Check',
-        scope: 'Movies',
-        description:
-          'Flag movies below your library\'s minimum resolution threshold. Configure per-library quality floors in Settings.',
-      },
-      {
-        route: '/coverage',
-        icon: 'search',
-        title: 'Unmanaged Movies',
-        scope: 'Movies',
-        description:
-          'Find movies in Plex that have no matching entry in Radarr. These movies won\'t receive quality upgrades or monitoring.',
-      },
-    ],
+    name: 'Radarr',
+    icon: 'database',
+    connected: Boolean(settingsStore.settings.radarr_url && settingsStore.settings.radarr_api_key_set),
+    description: settingsStore.settings.radarr_url
+      ? 'Server URL saved. Radarr-backed movie checks can use existing credentials.'
+      : 'Add Radarr to enable movie duration, quality, and unmanaged movie checks.',
   },
   {
-    title: 'TV Monitoring',
-    description:
-      'Find Sonarr monitoring gaps and repair them directly from the results.',
-    features: [
-      {
-        route: '/sonarr/monitoring',
-        icon: 'list',
-        title: 'Unmonitored Episodes',
-        scope: 'TV',
-        description:
-          'Find shows in Sonarr with unmonitored seasons or episodes. Enable monitoring directly from the results.',
-      },
-    ],
+    name: 'Sonarr',
+    icon: 'list',
+    connected: Boolean(settingsStore.settings.sonarr_url && settingsStore.settings.sonarr_api_key_set),
+    description: settingsStore.settings.sonarr_url
+      ? 'Server URL saved. Sonarr-backed TV checks can use existing credentials.'
+      : 'Add Sonarr to enable episode duration and monitoring diagnostics.',
   },
-]
+])
+
+const configuredServiceCount = computed(() => serviceStatus.value.filter((service) => service.connected).length)
+
+function formatLastRun(lastRun) {
+  if (!lastRun) return 'No saved run yet'
+  return `Saved ${lastRun.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${lastRun.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+}
+
+function snapshotStatus(hasResult, issueCount) {
+  if (!hasResult) {
+    return { label: 'Not run yet', severity: 'warn' }
+  }
+
+  if (issueCount > 0) {
+    return { label: `${issueCount} issue${issueCount === 1 ? '' : 's'} found`, severity: 'warn' }
+  }
+
+  return { label: 'Last run was clean', severity: 'success' }
+}
+
+const snapshots = computed(() => {
+  const movieDurationIssues = movieDurationStore.result?.summary?.flagged ?? 0
+  const movieQualityIssues = movieQualityStore.result?.summary?.flagged ?? 0
+  const unmanagedMovies = coverageStore.result?.summary?.unmanaged ?? 0
+  const episodeDurationIssues = episodeDurationStore.result?.summary?.flagged ?? 0
+  const unmonitoredSeries = sonarrMonitoringStore.result?.summary?.seriesWithIssues ?? 0
+
+  const items = [
+    {
+      route: '/movies/duration',
+      icon: 'clock',
+      title: 'Movie Duration Check',
+      description: 'Saved movie runtime comparison against Radarr expectations.',
+      lastRun: movieDurationStore.lastRun,
+      hasResult: Boolean(movieDurationStore.result),
+      issueCount: movieDurationIssues,
+      stats: [
+        { label: 'Flagged', value: String(movieDurationIssues) },
+        { label: 'No Match', value: String(movieDurationStore.result?.summary?.noMatch ?? 0) },
+      ],
+    },
+    {
+      route: '/movies/quality',
+      icon: 'video',
+      title: 'Video Quality Check',
+      description: 'Saved movie quality snapshot against your configured thresholds.',
+      lastRun: movieQualityStore.lastRun,
+      hasResult: Boolean(movieQualityStore.result),
+      issueCount: movieQualityIssues,
+      stats: [
+        { label: 'Below Threshold', value: String(movieQualityIssues) },
+        { label: 'Above Threshold', value: String(movieQualityStore.result?.summary?.overThreshold ?? 0) },
+      ],
+    },
+    {
+      route: '/coverage',
+      icon: 'search',
+      title: 'Unmanaged Movies',
+      description: 'Saved snapshot of Plex movies that are missing from Radarr.',
+      lastRun: coverageStore.lastRun,
+      hasResult: Boolean(coverageStore.result),
+      issueCount: unmanagedMovies,
+      stats: [
+        { label: 'Unmanaged', value: String(unmanagedMovies) },
+        { label: 'Total Movies', value: String(coverageStore.result?.summary?.total ?? 0) },
+      ],
+    },
+    {
+      route: '/sonarr/duration',
+      icon: 'clock',
+      title: 'Episode Duration Check',
+      description: 'Saved episode runtime comparison against Sonarr expectations.',
+      lastRun: episodeDurationStore.lastRun,
+      hasResult: Boolean(episodeDurationStore.result),
+      issueCount: episodeDurationIssues,
+      stats: [
+        { label: 'Flagged', value: String(episodeDurationIssues) },
+        { label: 'No Runtime', value: String(episodeDurationStore.result?.summary?.noMatch ?? 0) },
+      ],
+    },
+    {
+      route: '/sonarr/monitoring',
+      icon: 'list',
+      title: 'Unmonitored Episodes',
+      description: 'Saved monitoring snapshot for Sonarr series, seasons, and episodes.',
+      lastRun: sonarrMonitoringStore.lastRun,
+      hasResult: Boolean(sonarrMonitoringStore.result),
+      issueCount: unmonitoredSeries,
+      stats: [
+        { label: 'Series With Issues', value: String(unmonitoredSeries) },
+        { label: 'Unmonitored Episodes', value: String(sonarrMonitoringStore.result?.summary?.totalUnmonitoredEpisodes ?? 0) },
+      ],
+    },
+  ]
+
+  return items.map((item) => {
+    const status = snapshotStatus(item.hasResult, item.issueCount)
+    return {
+      ...item,
+      lastRunLabel: formatLastRun(item.lastRun),
+      statusLabel: status.label,
+      statusSeverity: status.severity,
+    }
+  })
+})
 </script>
 
 <style scoped>
@@ -113,122 +250,174 @@ const categories = [
   padding-top: var(--space-8);
 }
 
-.category-section + .category-section {
+.dashboard-section + .dashboard-section {
   margin-top: var(--space-8);
 }
 
-.category-header {
+.dashboard-section__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: var(--space-4);
+  flex-wrap: wrap;
 }
 
-.category-header h2 {
+.dashboard-section__header h2 {
   margin: 0 0 var(--space-2);
   font-size: var(--text-xl);
 }
 
-.category-header p {
+.dashboard-section__header p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--fg-muted);
+}
+
+.setup-grid,
+.snapshot-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.setup-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.snapshot-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.setup-card,
+.dashboard-link-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-card {
+  padding: var(--space-4);
+}
+
+.setup-card__topline,
+.snapshot-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.setup-card__title,
+.snapshot-card__title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.setup-card__title h3,
+.snapshot-card__title h3 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-md);
+}
+
+.setup-card p,
+.snapshot-card__title p {
   margin: 0;
   color: var(--fg-muted);
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: var(--space-4);
-}
-
-.feature-card {
+.dashboard-link-card {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  text-decoration: none;
   color: var(--fg);
-  box-shadow: var(--shadow-sm);
+  text-decoration: none;
   transition:
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
-  cursor: pointer;
 }
 
-.feature-card:hover {
+.dashboard-link-card:hover {
   border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
-.feature-icon {
-  width: 44px;
-  height: 44px;
+.dashboard-link-card--compact {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.snapshot-card__icon {
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.feature-icon :deep(cindor-icon) {
-  font-size: 1.1rem;
+.snapshot-card__icon :deep(cindor-icon),
+.setup-card__title :deep(cindor-icon) {
   color: var(--accent);
 }
 
-.feature-body {
-  flex: 1;
-  min-width: 0;
+.snapshot-card__arrow {
+  color: var(--fg-subtle);
+  padding-top: 2px;
+  flex-shrink: 0;
 }
 
-.feature-topline {
+.snapshot-card__meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
 }
 
-.feature-body h3 {
-  margin: 0;
-  font-size: var(--text-md);
+.snapshot-card__time {
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
-.feature-scope {
-  flex-shrink: 0;
-  min-height: 20px;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-subtle);
+.snapshot-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.snapshot-stat {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.snapshot-stat__label {
+  display: block;
+  margin-bottom: var(--space-1);
   color: var(--fg-subtle);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  font-weight: var(--weight-medium);
-  text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.feature-body p {
-  margin: 0;
-  color: var(--fg-muted);
-}
-
-.feature-arrow {
-  color: var(--fg-subtle);
-  padding-top: 2px;
+.snapshot-stat__value {
+  font-size: var(--text-lg);
 }
 
 @media (max-width: 640px) {
-  .feature-grid {
+  .snapshot-card__stats {
     grid-template-columns: 1fr;
-  }
-
-  .feature-topline {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 </style>
