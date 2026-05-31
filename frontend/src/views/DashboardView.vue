@@ -6,7 +6,7 @@
       </div>
       <div class="header-actions">
         <router-link to="/settings" class="dashboard-link-card dashboard-link-card--compact">
-          <AppIcon name="pi-cog" :size="16" />
+          <AppIcon name="settings" :size="16" />
           <span>Open Settings</span>
         </router-link>
       </div>
@@ -64,7 +64,7 @@
                 <p>{{ snapshot.description }}</p>
               </div>
             </div>
-            <AppIcon class="snapshot-card__arrow" name="pi-arrow-right" :size="16" />
+            <AppIcon class="snapshot-card__arrow" name="arrow-right" :size="16" />
           </div>
 
           <div class="snapshot-card__meta">
@@ -115,7 +115,7 @@ onMounted(() => {
 const serviceStatus = computed(() => [
   {
     name: 'Plex',
-    icon: 'pi-play-circle',
+    icon: 'circle-play',
     connected: Boolean(settingsStore.settings.plex_url && settingsStore.settings.plex_token_set),
     description: settingsStore.settings.plex_url
       ? 'Server URL saved. Token is ready for library and runtime scans.'
@@ -123,7 +123,7 @@ const serviceStatus = computed(() => [
   },
   {
     name: 'Radarr',
-    icon: 'pi-database',
+    icon: 'database',
     connected: Boolean(settingsStore.settings.radarr_url && settingsStore.settings.radarr_api_key_set),
     description: settingsStore.settings.radarr_url
       ? 'Server URL saved. Radarr-backed movie checks can use existing credentials.'
@@ -131,7 +131,7 @@ const serviceStatus = computed(() => [
   },
   {
     name: 'Sonarr',
-    icon: 'pi-list',
+    icon: 'list',
     connected: Boolean(settingsStore.settings.sonarr_url && settingsStore.settings.sonarr_api_key_set),
     description: settingsStore.settings.sonarr_url
       ? 'Server URL saved. Sonarr-backed TV checks can use existing credentials.'
@@ -168,7 +168,7 @@ const snapshots = computed(() => {
   const items = [
     {
       route: '/movies/duration',
-      icon: 'pi-clock',
+      icon: 'clock',
       title: 'Movie Duration Check',
       description: 'Saved movie runtime comparison against Radarr expectations.',
       lastRun: movieDurationStore.lastRun,
@@ -181,7 +181,7 @@ const snapshots = computed(() => {
     },
     {
       route: '/movies/quality',
-      icon: 'pi-video',
+      icon: 'video',
       title: 'Video Quality Check',
       description: 'Saved movie quality snapshot against your configured thresholds.',
       lastRun: movieQualityStore.lastRun,
@@ -194,7 +194,7 @@ const snapshots = computed(() => {
     },
     {
       route: '/coverage',
-      icon: 'pi-search',
+      icon: 'search',
       title: 'Unmanaged Movies',
       description: 'Saved snapshot of Plex movies that are missing from Radarr.',
       lastRun: coverageStore.lastRun,
@@ -207,7 +207,7 @@ const snapshots = computed(() => {
     },
     {
       route: '/sonarr/duration',
-      icon: 'pi-clock',
+      icon: 'clock',
       title: 'Episode Duration Check',
       description: 'Saved episode runtime comparison against Sonarr expectations.',
       lastRun: episodeDurationStore.lastRun,
@@ -220,7 +220,7 @@ const snapshots = computed(() => {
     },
     {
       route: '/sonarr/monitoring',
-      icon: 'pi-list',
+      icon: 'list',
       title: 'Unmonitored Episodes',
       description: 'Saved monitoring snapshot for Sonarr series, seasons, and episodes.',
       lastRun: sonarrMonitoringStore.lastRun,

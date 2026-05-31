@@ -10,7 +10,7 @@
       <div class="header-actions">
         <CindorButton type="button" :disabled="loading" @click="store.runCheck(false)">
           <span class="button-content">
-            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
           </span>
         </CindorButton>
@@ -22,7 +22,7 @@
           @click="store.runCheck(true)"
         >
           <span class="button-content">
-            <AppIcon name="pi-refresh" :size="16" />
+            <AppIcon name="refresh-cw" :size="16" />
             <span>Force Refresh Cache</span>
           </span>
         </CindorButton>
@@ -44,20 +44,20 @@
 
     <div v-if="result && result.flagged.length > 0" class="section">
       <h2 class="section-title">
-        <AppIcon name="pi-exclamation-triangle" :size="18" />
+        <AppIcon name="triangle-alert" :size="18" />
         Flagged Movies ({{ result.flagged.length }})
       </h2>
       <div v-if="selectedMovies.length > 0" class="bulk-toolbar">
         <span class="bulk-count">{{ selectedMovies.length }} selected</span>
         <CindorButton type="button" variant="ghost" :disabled="redownloading" @click="redownload">
           <span class="button-content">
-            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'pi-refresh'" :size="16" />
+            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'refresh-cw'" :size="16" />
             <span>{{ redownloading ? 'Queueing…' : 'Redownload' }}</span>
           </span>
         </CindorButton>
         <CindorButton type="button" variant="ghost" @click="selectedMovies = []">
           <span class="button-content">
-            <AppIcon name="pi-times" :size="16" />
+            <AppIcon name="x" :size="16" />
             <span>Clear</span>
           </span>
         </CindorButton>
@@ -98,27 +98,27 @@
               class="icon-link plex-link"
               title="Open in Plex"
               aria-label="Open in Plex"
-            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            ><AppIcon name="circle-play" :size="16" /></AppExternalLink>
             <AppExternalLink
               v-if="row.radarrSlug && radarrBaseUrl"
               :href="`${radarrBaseUrl}/movie/${row.radarrSlug}`"
               class="icon-link radarr-link"
               title="Open in Radarr"
               aria-label="Open in Radarr"
-            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+            ><AppIcon name="video" :size="16" /></AppExternalLink>
           </div>
         </template>
       </AppDataTable>
     </div>
 
     <div v-if="result && result.flagged.length === 0 && !loading" class="empty-state">
-      <AppIcon name="pi-check-circle" :size="42" />
+      <AppIcon name="circle-check" :size="42" />
       <p>No movies flagged! Differences stayed within the larger of {{ result.summary.leewayPercent }}% or {{ result.summary.minDiffMinutes }} minutes.</p>
     </div>
 
     <div v-if="result && result.noMatch.length > 0" class="section">
       <h2 class="section-title">
-        <AppIcon name="pi-question-circle" :size="18" />
+        <AppIcon name="circle-help" :size="18" />
         No Radarr Match ({{ result.noMatch.length }})
       </h2>
       <AppDataTable
@@ -145,14 +145,14 @@
               class="icon-link plex-link"
               title="Open in Plex"
               aria-label="Open in Plex"
-            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            ><AppIcon name="circle-play" :size="16" /></AppExternalLink>
           </div>
         </template>
       </AppDataTable>
     </div>
 
     <div v-if="!result && !loading" class="idle-state">
-      <AppIcon name="pi-clock" :size="42" />
+      <AppIcon name="clock" :size="42" />
       <p>Click <strong>Run Check</strong> to scan your Plex library for movies with unexpected durations.</p>
     </div>
 

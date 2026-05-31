@@ -10,7 +10,7 @@
       <div class="header-actions">
         <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
           <span class="button-content">
-            <AppIcon :name="loading ? 'loader-pinwheel' : 'pi-play'" :size="16" />
+            <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
           </span>
         </CindorButton>
@@ -30,7 +30,7 @@
 
     <div v-if="result && flaggedRows.length > 0" class="section">
       <h2 class="section-title">
-        <AppIcon name="pi-exclamation-triangle" :size="18" />
+        <AppIcon name="triangle-alert" :size="18" />
         Below Threshold ({{ flaggedRows.length }})
       </h2>
 
@@ -38,13 +38,13 @@
         <span class="bulk-count">{{ selectedUpgradeMovies.length }} selected</span>
         <CindorButton type="button" variant="ghost" :disabled="redownloading" @click="upgradeSelected">
           <span class="button-content">
-            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'pi-refresh'" :size="16" />
+            <AppIcon :name="redownloading ? 'loader-pinwheel' : 'refresh-cw'" :size="16" />
             <span>{{ redownloading ? 'Queueing…' : 'Upgrade' }}</span>
           </span>
         </CindorButton>
         <CindorButton type="button" variant="ghost" @click="selectedUpgradeMovies = []">
           <span class="button-content">
-            <AppIcon name="pi-times" :size="16" />
+            <AppIcon name="x" :size="16" />
             <span>Clear</span>
           </span>
         </CindorButton>
@@ -83,14 +83,14 @@
               class="icon-link plex-link"
               title="Open in Plex"
               aria-label="Open in Plex"
-            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            ><AppIcon name="circle-play" :size="16" /></AppExternalLink>
             <AppExternalLink
               v-if="row.radarrSlug && radarrBaseUrl"
               :href="radarrLink(row.radarrSlug)"
               class="icon-link radarr-link"
               title="Open in Radarr"
               aria-label="Open in Radarr"
-            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+            ><AppIcon name="video" :size="16" /></AppExternalLink>
           </div>
         </template>
       </AppDataTable>
@@ -116,7 +116,7 @@
         </CindorButton>
         <CindorButton type="button" variant="ghost" @click="selectedDowngradeMovies = []">
           <span class="button-content">
-            <AppIcon name="pi-times" :size="16" />
+            <AppIcon name="x" :size="16" />
             <span>Clear</span>
           </span>
         </CindorButton>
@@ -155,21 +155,21 @@
               class="icon-link plex-link"
               title="Open in Plex"
               aria-label="Open in Plex"
-            ><AppIcon name="pi-play-circle" :size="16" /></AppExternalLink>
+            ><AppIcon name="circle-play" :size="16" /></AppExternalLink>
             <AppExternalLink
               v-if="row.radarrSlug && radarrBaseUrl"
               :href="radarrLink(row.radarrSlug)"
               class="icon-link radarr-link"
               title="Open in Radarr"
               aria-label="Open in Radarr"
-            ><AppIcon name="pi-video" :size="16" /></AppExternalLink>
+            ><AppIcon name="video" :size="16" /></AppExternalLink>
           </div>
         </template>
       </AppDataTable>
     </div>
 
     <div v-if="result && flaggedRows.length === 0 && overThresholdRows.length === 0 && !loading" class="empty-state">
-      <AppIcon name="pi-check-circle" :size="42" />
+      <AppIcon name="circle-check" :size="42" />
       <p>All movies match their library quality threshold.</p>
     </div>
 
@@ -179,7 +179,7 @@
     </div>
 
     <div v-if="!result && !loading" class="idle-state">
-      <AppIcon name="pi-video" :size="42" />
+      <AppIcon name="video" :size="42" />
       <p>Run a check to see which movies are below or above their library quality threshold.</p>
     </div>
   </div>
