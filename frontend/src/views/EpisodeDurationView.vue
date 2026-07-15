@@ -8,7 +8,16 @@
         </p>
       </div>
       <div class="header-actions">
-        <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
+        <label class="inline-toggle" for="episode-duration-deep-scan">
+          <CindorCheckbox
+            id="episode-duration-deep-scan"
+            :model-value="deepScan"
+            :disabled="loading"
+            @update:model-value="deepScan = !!$event"
+          />
+          <span>Deep scan</span>
+        </label>
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck({ deepScan })">
           <span class="button-content">
             <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
@@ -19,6 +28,13 @@
 
     <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
+    </CindorAlert>
+
+    <CindorAlert v-if="result?.summary?.deepScan" tone="neutral" class="page-alert">
+      Deep scan ran a full `ffmpeg` decode pass for each episode in this run.
+      <span v-if="result.summary.deepScanScanned || result.summary.deepScanMetadataLookups || result.summary.deepScanFallbacks">
+        {{ result.summary.deepScanScanned || 0 }} decode(s), {{ result.summary.deepScanMetadataLookups || 0 }} metadata lookup(s), {{ result.summary.deepScanFallbacks || 0 }} fallback(s).
+      </span>
     </CindorAlert>
 
     <div v-if="result" class="summary-row">
@@ -156,23 +172,25 @@
 
     <div v-if="loading" class="loading-state">
       <CindorSpinner />
-      <p>Fetching episode data from Plex and Sonarr...</p>
+      <p>{{ deepScan ? 'Running ffmpeg deep scan on Plex episodes...' : 'Fetching episode data from Plex and Sonarr...' }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useEpisodeDurationStore } from '../stores/episodeDuration'
+import { useSettingsStore } from '../stores/settings'
 import { useAppToast } from '../composables/useAppToast'
 import { apiPost } from '../api/client'
-import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import { CindorAlert, CindorButton, CindorCheckbox, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
 import AppDataTable from '../components/AppDataTable.vue'
 import AppExternalLink from '../components/AppExternalLink.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppTag from '../components/AppTag.vue'
 
 const store = useEpisodeDurationStore()
+const settingsStore = useSettingsStore()
 const toast = useAppToast()
 
 const result = computed(() => store.result)
@@ -185,6 +203,7 @@ const sonarrBaseUrl = computed(() => store.result?.summary?.sonarrUrl || '')
 
 const selectedEpisodes = ref([])
 const redownloading = ref(false)
+const deepScan = ref(false)
 
 const flaggedColumns = [
   { key: 'showTitle', label: 'Show', sortable: true },
@@ -245,6 +264,11 @@ const lastRunLabel = computed(() => {
     : `Last run: ${run.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${run.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 })
 
+onMounted(async () => {
+  await settingsStore.fetchSettings()
+  deepScan.value = settingsStore.settings.quality_deep_scan === '1'
+})
+
 function formatMinutes(min) {
   if (!min) return '—'
   const h = Math.floor(min / 60)
@@ -276,5 +300,13 @@ function plexLink(ratingKey) {
 .ep-title {
   color: var(--fg-subtle);
   font-size: var(--text-xs);
+}
+
+.inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
 }
 </style>

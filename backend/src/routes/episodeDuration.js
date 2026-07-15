@@ -29,6 +29,14 @@ function validateConfig(config) {
   return missing;
 }
 
+function parseBoolean(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
+}
+
 async function mapWithConcurrency(items, fn, limit) {
   const results = new Array(items.length);
   let nextIndex = 0;
@@ -58,13 +66,23 @@ router.get('/check', async (req, res) => {
   console.log('\n[EpisodeDuration] Starting episode duration check');
 
   try {
+    const deepScanSetting = parseBoolean(getSetting('quality_deep_scan')) || false;
+    const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
+
     // --- Step 1: Fetch Plex TV episodes ---
-    let plexEpisodes, machineIdentifier;
+    let plexEpisodes, machineIdentifier, deepScanFallbacks, deepScanMetadataLookups, deepScanScanned;
     try {
-      ({ episodes: plexEpisodes, machineIdentifier } = await fetchPlexTvEpisodes(
+      ({
+        episodes: plexEpisodes,
+        machineIdentifier,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+      } = await fetchPlexTvEpisodes(
         config.plexUrl,
         config.plexToken,
-        config.selectedLibraryIds
+        config.selectedLibraryIds,
+        { deepScan }
       ));
     } catch (plexErr) {
       console.error('[EpisodeDuration] Plex fetch FAILED:', plexErr.message);
@@ -182,6 +200,11 @@ router.get('/check', async (req, res) => {
         plexUrl: config.plexUrl,
         sonarrUrl: config.sonarrUrl,
         plexMachineId: machineIdentifier,
+        deepScan,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+        deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
       },
       flagged,
       noMatch,

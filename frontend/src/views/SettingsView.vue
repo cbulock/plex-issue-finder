@@ -159,8 +159,8 @@
               @update:model-value="qualityDeepScan = !!$event"
             />
             <span class="toggle-copy">
-              <span class="toggle-title">Use deep scan for video quality checks</span>
-              <span class="toggle-meta">Fetch each movie's metadata individually for more accurate media details. Slower on large libraries.</span>
+              <span class="toggle-title">Use deep scan for Plex media checks</span>
+              <span class="toggle-meta">Run a full `ffmpeg` decode for each movie or episode to verify media details directly. Much slower on large libraries.</span>
             </span>
           </label>
         </section>

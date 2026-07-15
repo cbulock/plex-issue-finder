@@ -31,8 +31,10 @@
     </CindorAlert>
 
     <CindorAlert v-if="result?.summary?.deepScan" tone="neutral" class="page-alert">
-      Deep scan fetched per-movie Plex metadata for this run.
-      <span v-if="result.summary.deepScanFallbacks"> {{ result.summary.deepScanFallbacks }} item(s) fell back to the faster library scan after metadata fetch errors.</span>
+      Deep scan ran a full `ffmpeg` decode pass for each movie in this run.
+      <span v-if="result.summary.deepScanScanned || result.summary.deepScanMetadataLookups || result.summary.deepScanFallbacks">
+        {{ result.summary.deepScanScanned || 0 }} decode(s), {{ result.summary.deepScanMetadataLookups || 0 }} metadata lookup(s), {{ result.summary.deepScanFallbacks || 0 }} fallback(s).
+      </span>
     </CindorAlert>
 
     <div v-if="result" class="summary-row">
@@ -189,7 +191,7 @@
 
     <div v-if="loading" class="loading-state">
       <CindorSpinner />
-      <p>Fetching movie quality data from Plex...</p>
+      <p>{{ deepScan ? 'Running ffmpeg deep scan on Plex movies...' : 'Fetching movie quality data from Plex...' }}</p>
     </div>
 
     <div v-if="!result && !loading" class="idle-state">

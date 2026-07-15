@@ -53,7 +53,7 @@ router.get('/check', async (req, res) => {
   console.log('[Quality] Deep scan:', deepScan);
 
   try {
-    const [{ movies, machineIdentifier, deepScanFallbacks }, radarrMap] = await Promise.all([
+    const [{ movies, machineIdentifier, deepScanFallbacks, deepScanMetadataLookups, deepScanScanned }, radarrMap] = await Promise.all([
       fetchPlexMovies(plexUrl, plexToken, selectedLibraryIds, { deepScan }),
       radarrUrl && radarrApiKey ? fetchRadarrMovies(radarrUrl, radarrApiKey) : Promise.resolve(new Map()),
     ]);
@@ -109,6 +109,9 @@ router.get('/check', async (req, res) => {
         radarrUrl: radarrUrl || '',
         deepScan,
         deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+        deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
       },
       flagged,
       overThreshold,

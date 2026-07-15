@@ -45,11 +45,17 @@ export const useEpisodeDurationStore = defineStore('episodeDuration', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  async function runCheck() {
+  async function runCheck(options = {}) {
     loading.value = true
     error.value = null
     try {
-      const data = await apiGet('/api/episode-duration/check')
+      const params = new URLSearchParams()
+      if (options.deepScan !== undefined) {
+        params.set('deep', options.deepScan ? '1' : '0')
+      }
+
+      const path = params.size > 0 ? `/api/episode-duration/check?${params.toString()}` : '/api/episode-duration/check'
+      const data = await apiGet(path)
       // markRaw prevents Vue from making the large result arrays deeply reactive,
       // which keeps the table views from doing unnecessary work on large result sets.
       result.value = markRaw(data)

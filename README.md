@@ -94,7 +94,7 @@ The frontend also installs the shared Emberline design system directly from GitH
 2. Under **Plex Libraries** in Settings, select the libraries to scan and set a minimum resolution threshold per library (default: **1080p**).
 3. Navigate to **Video Quality Check** and click **Run Check**.
 4. Movies below their library's threshold are listed separately from movies above it, showing resolution, codec, and audio details for each.
-5. Optional: enable **Deep scan** to fetch per-movie Plex metadata for more accurate media details. This is slower, especially on large libraries.
+5. Optional: enable **Deep scan** to run a full `ffmpeg` decode pass per movie for more trustworthy media details. Plex metadata is used only as a fallback to locate a media part when the library listing does not already expose one. This is much slower, especially on large libraries.
 6. Select movies in the **Below Threshold** list and click **Upgrade** to delete the current file in Radarr and queue a replacement search.
 7. Select movies in the **Above Threshold** list and click **Downgrade** to delete the current file in Radarr and queue a replacement search for a smaller file.
 8. Radarr still decides the replacement based on that movie's current quality profile, so a downgrade will only happen if the Radarr profile allows a lower-quality result.
@@ -119,8 +119,9 @@ The frontend also installs the shared Emberline design system directly from GitH
 1. Configure Plex and Sonarr URLs + credentials in **Settings**.
 2. Set your preferred leeway percentage (default: **5%**) and episode minimum difference (default: **3 min**) under **Duration Tolerance** in Settings.
 3. Navigate to **Episode Duration Check** and click **Run Check**.
-4. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
-5. Select flagged episodes and click **Redownload** to delete the existing file in Sonarr and trigger a new automatic episode search.
+4. Optional: enable **Deep scan** to run a full `ffmpeg` decode pass per episode before comparing durations. Plex metadata is used only as a fallback to locate a media part when needed.
+5. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
+6. Select flagged episodes and click **Redownload** to delete the existing file in Sonarr and trigger a new automatic episode search.
 
 ## Data Storage
 
