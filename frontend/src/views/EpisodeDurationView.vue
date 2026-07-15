@@ -13,7 +13,7 @@
             id="episode-duration-deep-scan"
             :model-value="deepScan"
             :disabled="loading"
-            @update:model-value="deepScan = !!$event"
+            @update:model-value="deepScan = !!$event; deepScanHydrated = true"
           />
           <span>Deep scan</span>
         </label>
@@ -204,6 +204,7 @@ const sonarrBaseUrl = computed(() => store.result?.summary?.sonarrUrl || '')
 const selectedEpisodes = ref([])
 const redownloading = ref(false)
 const deepScan = ref(false)
+const deepScanHydrated = ref(false)
 
 const flaggedColumns = [
   { key: 'showTitle', label: 'Show', sortable: true },
@@ -266,7 +267,10 @@ const lastRunLabel = computed(() => {
 
 onMounted(async () => {
   await settingsStore.fetchSettings()
-  deepScan.value = settingsStore.settings.quality_deep_scan === '1'
+  if (!deepScanHydrated.value) {
+    deepScan.value = settingsStore.settings.plex_deep_scan === '1'
+    deepScanHydrated.value = true
+  }
 })
 
 function formatMinutes(min) {

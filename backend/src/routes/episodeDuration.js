@@ -3,7 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 const { fetchPlexTvEpisodes } = require('../api/plex');
 const { fetchSonarrSeries } = require('../api/sonarr');
-const { getSetting } = require('../db');
+const { DEEP_SCAN_SETTING_KEY, getSetting } = require('../db');
 
 const CONCURRENCY_LIMIT = 5;
 
@@ -66,7 +66,7 @@ router.get('/check', async (req, res) => {
   console.log('\n[EpisodeDuration] Starting episode duration check');
 
   try {
-    const deepScanSetting = parseBoolean(getSetting('quality_deep_scan')) || false;
+    const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
     const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
 
     // --- Step 1: Fetch Plex TV episodes ---

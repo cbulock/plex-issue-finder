@@ -337,7 +337,7 @@ onMounted(async () => {
     // Ignore invalid persisted thresholds and keep defaults.
   }
 
-  qualityDeepScan.value = store.settings.quality_deep_scan === '1'
+  qualityDeepScan.value = store.settings.plex_deep_scan === '1'
 })
 
 async function loadLibraries() {
@@ -384,7 +384,7 @@ async function handleSave(event) {
     episode_min_diff_min: episodeMinDiffNum.value,
     plex_library_ids: selectedLibraryIds.value.join(','),
     quality_thresholds: JSON.stringify(qualityThresholds),
-    quality_deep_scan: qualityDeepScan.value ? '1' : '0',
+    plex_deep_scan: qualityDeepScan.value ? '1' : '0',
   }
 
   if (form.value.plex_token) payload.plex_token = form.value.plex_token

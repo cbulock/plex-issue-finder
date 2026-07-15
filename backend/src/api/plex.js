@@ -6,6 +6,7 @@ const DEEP_SCAN_CONCURRENCY = Number(process.env.FFMPEG_DEEP_SCAN_CONCURRENCY ||
 const DEEP_SCAN_TIMEOUT_MS = Number(process.env.FFMPEG_DEEP_SCAN_TIMEOUT_MS || 15 * 60 * 1000);
 const FFMPEG_TERM_GRACE_MS = Number(process.env.FFMPEG_DEEP_SCAN_TERM_GRACE_MS || 5000);
 const FFMPEG_LOG_LIMIT = 256 * 1024;
+const SENSITIVE_URL_PARAMS = ['X-Plex-Token', 'plexToken', 'token'];
 
 let ffmpegAvailablePromise = null;
 
@@ -108,6 +109,25 @@ function parseFfmpegStreamMetadata(stderrText) {
     audioCodec,
     audioChannels: extractPrimaryAudioChannels(audioLine),
   };
+}
+
+function redactSensitiveUrlParams(text) {
+  let redacted = String(text || '');
+
+  for (const paramName of SENSITIVE_URL_PARAMS) {
+    const encodedName = paramName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    redacted = redacted.replace(new RegExp(`(${encodedName}=)[^&\\s"'|]+`, 'gi'), '$1[REDACTED]');
+  }
+
+  return redacted;
+}
+
+function formatDeepScanTimeout(timeoutMs) {
+  if (timeoutMs < 1000) {
+    return `${timeoutMs}ms`;
+  }
+
+  return `${Math.ceil(timeoutMs / 1000)}s`;
 }
 
 async function mapWithConcurrency(items, limit, worker) {
@@ -250,7 +270,7 @@ async function runFfmpegDeepScan(streamUrl, options = {}) {
 
       if (timedOut) {
         const killDetail = forcedKill ? ` after SIGTERM+SIGKILL (${termGraceMs}ms grace)` : ' after SIGTERM';
-        reject(new Error(`ffmpeg deep scan timed out after ${Math.round(timeoutMs / 1000)}s${killDetail}`));
+        reject(new Error(`ffmpeg deep scan timed out after ${formatDeepScanTimeout(timeoutMs)}${killDetail}`));
         return;
       }
 
@@ -259,7 +279,9 @@ async function runFfmpegDeepScan(streamUrl, options = {}) {
         return;
       }
 
-      const detail = stderr.trim().split(/\r?\n/).slice(-3).join(' | ') || `exit=${code} signal=${signal || 'none'}`;
+      const detail = redactSensitiveUrlParams(
+        stderr.trim().split(/\r?\n/).slice(-3).join(' | ') || `exit=${code} signal=${signal || 'none'}`
+      );
       reject(new Error(`ffmpeg deep scan failed: ${detail}`));
     });
   });
@@ -566,6 +588,8 @@ module.exports = {
     ensureFfmpegAvailable,
     mergeDeepScannedMedia,
     parseFfmpegStreamMetadata,
+    redactSensitiveUrlParams,
+    formatDeepScanTimeout,
     resolveDeepScanSourceItem,
     runFfmpegDeepScan,
   },

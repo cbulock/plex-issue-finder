@@ -126,7 +126,7 @@ test('runFfmpegDeepScan times out with SIGTERM before SIGKILL when ffmpeg exits 
   assert.deepEqual(proc.killSignals, ['SIGTERM']);
   proc.emit('close', null, 'SIGTERM');
 
-  await assert.rejects(promise, /timed out after 0s after SIGTERM/);
+  await assert.rejects(promise, /timed out after 10ms after SIGTERM/);
   assert.deepEqual(proc.killSignals, ['SIGTERM']);
 });
 
@@ -150,4 +150,27 @@ test('runFfmpegDeepScan escalates to SIGKILL when ffmpeg ignores SIGTERM', async
   proc.emit('close', null, 'SIGKILL');
 
   await assert.rejects(promise, /SIGTERM\+SIGKILL/);
+});
+
+test('runFfmpegDeepScan redacts Plex tokens from stderr-derived error messages', async () => {
+  const proc = createMockProcess();
+
+  const promise = __test.runFfmpegDeepScan('http://plex.local/video', {
+    spawnImpl() {
+      process.nextTick(() => {
+        proc.stderr.emit('data', Buffer.from('http://plex.local/library/parts/1/file.mkv?X-Plex-Token=super-secret-token\n'));
+        proc.emit('close', 1, null);
+      });
+      return proc;
+    },
+  });
+
+  await assert.rejects(
+    promise,
+    (err) => {
+      assert.match(err.message, /X-Plex-Token=\[REDACTED\]/);
+      assert.doesNotMatch(err.message, /super-secret-token/);
+      return true;
+    }
+  );
 });

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { fetchPlexMovies } = require('../api/plex');
 const { fetchRadarrMovies } = require('../api/radarr');
-const { getSetting } = require('../db');
+const { DEEP_SCAN_SETTING_KEY, getSetting } = require('../db');
 
 const RESOLUTION_RANK = { '480p': 1, '720p': 2, '1080p': 3, '4k': 4 };
 
@@ -45,7 +45,7 @@ router.get('/check', async (req, res) => {
     thresholds = {};
   }
 
-  const deepScanSetting = parseBoolean(getSetting('quality_deep_scan')) || false;
+  const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
   const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
 
   console.log('\n[Quality] Starting quality check');

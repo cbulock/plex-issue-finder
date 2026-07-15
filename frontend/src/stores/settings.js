@@ -15,7 +15,7 @@ export const useSettingsStore = defineStore('settings', () => {
     episode_min_diff_min: '3',
     plex_library_ids: '',
     quality_thresholds: '{}',
-    quality_deep_scan: '0',
+    plex_deep_scan: '0',
     plex_token_set: false,
     radarr_api_key_set: false,
     sonarr_api_key_set: false,

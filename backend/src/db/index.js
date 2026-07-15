@@ -4,6 +4,8 @@ const path = require('path');
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../data/plex-issue-finder.db');
 
 let db;
+const DEEP_SCAN_SETTING_KEY = 'plex_deep_scan';
+const LEGACY_DEEP_SCAN_SETTING_KEY = 'quality_deep_scan';
 
 function getDb() {
   if (!db) {
@@ -53,13 +55,23 @@ function initSchema() {
     ['episode_min_diff_min', '3'],
     ['plex_library_ids', ''],
     ['quality_thresholds', '{}'],
-    ['quality_deep_scan', '0'],
+    [DEEP_SCAN_SETTING_KEY, '0'],
   ];
   const insert = db.prepare(
     'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'
   );
   for (const [key, value] of defaults) {
     insert.run(key, value);
+  }
+
+  const legacyDeepScan = db
+    .prepare('SELECT value FROM settings WHERE key = ?')
+    .get(LEGACY_DEEP_SCAN_SETTING_KEY);
+  if (legacyDeepScan) {
+    db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)')
+      .run(DEEP_SCAN_SETTING_KEY, legacyDeepScan.value);
+    db.prepare('DELETE FROM settings WHERE key = ?')
+      .run(LEGACY_DEEP_SCAN_SETTING_KEY);
   }
 
   // Seed from .env if values are present and settings are still empty
@@ -121,6 +133,7 @@ function getCacheStats() {
 }
 
 module.exports = {
+  DEEP_SCAN_SETTING_KEY,
   getDb,
   getSetting,
   getAllSettings,
