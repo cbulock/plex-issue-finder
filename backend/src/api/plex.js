@@ -1,6 +1,65 @@
 const axios = require('axios');
 
 const MS_PER_MINUTE = 60000;
+const DEEP_SCAN_CONCURRENCY = 6;
+
+function extractTmdbId(item) {
+  if (!item.Guid || !Array.isArray(item.Guid)) {
+    return null;
+  }
+
+  const tmdbGuid = item.Guid.find((guid) => guid.id && guid.id.startsWith('tmdb://'));
+  if (!tmdbGuid) {
+    return null;
+  }
+
+  return parseInt(tmdbGuid.id.replace('tmdb://', ''), 10);
+}
+
+function mapMovieMetadata(item, section) {
+  const media = item.Media && item.Media[0];
+  const durationMs = media ? media.duration : item.duration;
+
+  return {
+    title: item.title,
+    year: item.year,
+    tmdbId: extractTmdbId(item),
+    ratingKey: item.ratingKey,
+    sectionKey: String(section.key),
+    sectionTitle: section.title,
+    durationMs: durationMs || 0,
+    durationMin: durationMs ? Math.round(durationMs / MS_PER_MINUTE) : 0,
+    videoResolution: (media && media.videoResolution) || '',
+    videoCodec: (media && media.videoCodec) || '',
+    audioCodec: (media && media.audioCodec) || '',
+    audioChannels: (media && media.audioChannels) || 0,
+  };
+}
+
+async function mapWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex++;
+      results[currentIndex] = await worker(items[currentIndex], currentIndex);
+    }
+  }
+
+  const workerCount = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+  return results;
+}
+
+async function fetchPlexMovieMetadata(baseUrl, headers, ratingKey) {
+  const res = await axios.get(`${baseUrl}/library/metadata/${ratingKey}`, {
+    headers,
+    params: { includeGuids: 1 },
+  });
+
+  return res.data?.MediaContainer?.Metadata?.[0] || null;
+}
 
 /**
  * Fetches all library sections from Plex.
@@ -26,9 +85,10 @@ async function fetchPlexLibraries(plexUrl, plexToken) {
  * If selectedSectionKeys is a non-empty array, only scans those sections (still filtered to type=movie).
  * Returns { movies, machineIdentifier }
  */
-async function fetchPlexMovies(plexUrl, plexToken, selectedSectionKeys = null) {
+async function fetchPlexMovies(plexUrl, plexToken, selectedSectionKeys = null, options = {}) {
   const headers = { 'X-Plex-Token': plexToken, Accept: 'application/json' };
   const baseUrl = plexUrl.replace(/\/$/, '');
+  const deepScan = options.deepScan === true;
 
   // 1. Get server identity (machineIdentifier for deep links)
   console.log('[Plex] Fetching server identity...');
@@ -56,6 +116,7 @@ async function fetchPlexMovies(plexUrl, plexToken, selectedSectionKeys = null) {
   }
 
   const movies = [];
+  let deepScanFallbacks = 0;
 
   for (const section of movieSections) {
     console.log(`[Plex] Fetching movies from section "${section.title}" (key=${section.key})...`);
@@ -67,46 +128,37 @@ async function fetchPlexMovies(plexUrl, plexToken, selectedSectionKeys = null) {
     const items = moviesRes.data.MediaContainer.Metadata || [];
     console.log(`[Plex] Section "${section.title}": ${items.length} items`);
 
+    const scanItems = deepScan
+      ? await mapWithConcurrency(items, DEEP_SCAN_CONCURRENCY, async (item) => {
+        try {
+          const detailedItem = await fetchPlexMovieMetadata(baseUrl, headers, item.ratingKey);
+          return detailedItem || item;
+        } catch (err) {
+          deepScanFallbacks += 1;
+          console.warn(`[Plex] Deep scan fallback for "${item.title}" (${item.ratingKey}): ${err.message}`);
+          return item;
+        }
+      })
+      : items;
+
     let withTmdb = 0;
     let withoutTmdb = 0;
 
-    for (const item of items) {
-      // Extract duration from the first media item
-      const media = item.Media && item.Media[0];
-      const durationMs = media ? media.duration : item.duration;
-
-      // Extract TMDB id from Guids — requires includeGuids=1 on the request
-      let tmdbId = null;
-      if (item.Guid && Array.isArray(item.Guid)) {
-        const tmdbGuid = item.Guid.find((g) => g.id && g.id.startsWith('tmdb://'));
-        if (tmdbGuid) {
-          tmdbId = parseInt(tmdbGuid.id.replace('tmdb://', ''), 10);
-        }
-      }
-
-      if (tmdbId) withTmdb++; else withoutTmdb++;
-
-      movies.push({
-        title: item.title,
-        year: item.year,
-        tmdbId,
-        ratingKey: item.ratingKey,
-        sectionKey: String(section.key),
-        sectionTitle: section.title,
-        durationMs: durationMs || 0,
-        durationMin: durationMs ? Math.round(durationMs / MS_PER_MINUTE) : 0,
-        videoResolution: (media && media.videoResolution) || '',
-        videoCodec: (media && media.videoCodec) || '',
-        audioCodec: (media && media.audioCodec) || '',
-        audioChannels: (media && media.audioChannels) || 0,
-      });
+    for (const item of scanItems) {
+      const movie = mapMovieMetadata(item, section);
+      if (movie.tmdbId) withTmdb++; else withoutTmdb++;
+      movies.push(movie);
     }
 
     console.log(`[Plex] Section "${section.title}": ${withTmdb} with TMDB ID, ${withoutTmdb} without`);
   }
 
+  if (deepScan) {
+    console.log(`[Plex] Deep scan completed with ${deepScanFallbacks} fallback item(s)`);
+  }
+
   console.log(`[Plex] Total movies fetched: ${movies.length}`);
-  return { movies, machineIdentifier };
+  return { movies, machineIdentifier, deepScan, deepScanFallbacks };
 }
 
 /**

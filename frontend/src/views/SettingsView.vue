@@ -152,6 +152,17 @@
           <p v-else-if="!librariesLoading" class="field-hint muted">
             Click "Load Libraries" to fetch available libraries from your Plex server.
           </p>
+          <label class="toggle-row" for="quality-deep-scan">
+            <CindorCheckbox
+              id="quality-deep-scan"
+              :model-value="qualityDeepScan"
+              @update:model-value="qualityDeepScan = !!$event"
+            />
+            <span class="toggle-copy">
+              <span class="toggle-title">Use deep scan for video quality checks</span>
+              <span class="toggle-meta">Fetch each movie's metadata individually for more accurate media details. Slower on large libraries.</span>
+            </span>
+          </label>
         </section>
       </CindorCard>
 
@@ -303,6 +314,7 @@ const episodeMinDiffInput = computed({
 const availableLibraries = ref([])
 const selectedLibraryIds = ref([])
 const qualityThresholds = reactive({})
+const qualityDeepScan = ref(false)
 const librariesLoading = ref(false)
 const libraryError = ref('')
 
@@ -324,6 +336,8 @@ onMounted(async () => {
   } catch {
     // Ignore invalid persisted thresholds and keep defaults.
   }
+
+  qualityDeepScan.value = store.settings.quality_deep_scan === '1'
 })
 
 async function loadLibraries() {
@@ -370,6 +384,7 @@ async function handleSave(event) {
     episode_min_diff_min: episodeMinDiffNum.value,
     plex_library_ids: selectedLibraryIds.value.join(','),
     quality_thresholds: JSON.stringify(qualityThresholds),
+    quality_deep_scan: qualityDeepScan.value ? '1' : '0',
   }
 
   if (form.value.plex_token) payload.plex_token = form.value.plex_token
@@ -517,6 +532,31 @@ async function handleSave(event) {
 .threshold-select {
   margin-left: auto;
   width: 140px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-subtle) 70%, transparent);
+}
+
+.toggle-copy {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.toggle-title {
+  font-weight: 600;
+}
+
+.toggle-meta {
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
 }
 
 .library-label {

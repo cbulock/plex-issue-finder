@@ -16,6 +16,14 @@ function parseResolution(raw) {
   return { label: raw, rank: 0 };
 }
 
+function parseBoolean(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
+}
+
 // GET /api/quality/check
 router.get('/check', async (req, res) => {
   const plexUrl = getSetting('plex_url');
@@ -37,12 +45,16 @@ router.get('/check', async (req, res) => {
     thresholds = {};
   }
 
+  const deepScanSetting = parseBoolean(getSetting('quality_deep_scan')) || false;
+  const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
+
   console.log('\n[Quality] Starting quality check');
   console.log('[Quality] Thresholds by section:', thresholds);
+  console.log('[Quality] Deep scan:', deepScan);
 
   try {
-    const [{ movies, machineIdentifier }, radarrMap] = await Promise.all([
-      fetchPlexMovies(plexUrl, plexToken, selectedLibraryIds),
+    const [{ movies, machineIdentifier, deepScanFallbacks }, radarrMap] = await Promise.all([
+      fetchPlexMovies(plexUrl, plexToken, selectedLibraryIds, { deepScan }),
       radarrUrl && radarrApiKey ? fetchRadarrMovies(radarrUrl, radarrApiKey) : Promise.resolve(new Map()),
     ]);
     console.log(`[Quality] Fetched ${movies.length} movies from Plex, ${radarrMap.size} from Radarr`);
@@ -95,6 +107,8 @@ router.get('/check', async (req, res) => {
         plexUrl,
         plexMachineId: machineIdentifier,
         radarrUrl: radarrUrl || '',
+        deepScan,
+        deepScanFallbacks,
       },
       flagged,
       overThreshold,

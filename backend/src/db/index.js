@@ -53,6 +53,7 @@ function initSchema() {
     ['episode_min_diff_min', '3'],
     ['plex_library_ids', ''],
     ['quality_thresholds', '{}'],
+    ['quality_deep_scan', '0'],
   ];
   const insert = db.prepare(
     'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'

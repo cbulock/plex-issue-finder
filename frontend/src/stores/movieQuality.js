@@ -26,11 +26,17 @@ export const useMovieQualityStore = defineStore('movieQuality', () => {
     } catch { /* ignore */ }
   }
 
-  async function runCheck() {
+  async function runCheck(options = {}) {
     loading.value = true
     error.value = null
     try {
-      const data = await apiGet('/api/quality/check')
+      const params = new URLSearchParams()
+      if (options.deepScan !== undefined) {
+        params.set('deep', options.deepScan ? '1' : '0')
+      }
+
+      const path = params.size > 0 ? `/api/quality/check?${params.toString()}` : '/api/quality/check'
+      const data = await apiGet(path)
       result.value = markRaw(data)
       lastRun.value = new Date()
       saveToStorage()

@@ -8,7 +8,16 @@
         </p>
       </div>
       <div class="header-actions">
-        <CindorButton type="button" :disabled="loading" @click="store.runCheck()">
+        <label class="inline-toggle" for="movie-quality-deep-scan">
+          <CindorCheckbox
+            id="movie-quality-deep-scan"
+            :model-value="deepScan"
+            :disabled="loading"
+            @update:model-value="deepScan = !!$event"
+          />
+          <span>Deep scan</span>
+        </label>
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck({ deepScan })">
           <span class="button-content">
             <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
@@ -19,6 +28,11 @@
 
     <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
+    </CindorAlert>
+
+    <CindorAlert v-if="result?.summary?.deepScan" tone="neutral" class="page-alert">
+      Deep scan fetched per-movie Plex metadata for this run.
+      <span v-if="result.summary.deepScanFallbacks"> {{ result.summary.deepScanFallbacks }} item(s) fell back to the faster library scan after metadata fetch errors.</span>
     </CindorAlert>
 
     <div v-if="result" class="summary-row">
@@ -186,17 +200,19 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMovieQualityStore } from '../stores/movieQuality'
+import { useSettingsStore } from '../stores/settings'
 import { useAppToast } from '../composables/useAppToast'
 import { apiPost } from '../api/client'
-import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import { CindorAlert, CindorButton, CindorCheckbox, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
 import AppDataTable from '../components/AppDataTable.vue'
 import AppExternalLink from '../components/AppExternalLink.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppTag from '../components/AppTag.vue'
 
 const store = useMovieQualityStore()
+const settingsStore = useSettingsStore()
 const toast = useAppToast()
 
 const result = computed(() => store.result)
@@ -213,6 +229,7 @@ const selectedUpgradeMovies = ref([])
 const selectedDowngradeMovies = ref([])
 const redownloading = ref(false)
 const downgrading = ref(false)
+const deepScan = ref(false)
 
 const flaggedColumns = [
   { key: 'title', label: 'Title', sortable: true, minWidth: '12rem', priority: 1 },
@@ -235,6 +252,11 @@ const lastRunLabel = computed(() => {
   return sameDay
     ? `Last run: ${run.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
     : `Last run: ${run.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${run.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+})
+
+onMounted(async () => {
+  await settingsStore.fetchSettings()
+  deepScan.value = settingsStore.settings.quality_deep_scan === '1'
 })
 
 function plexLink(ratingKey) {
@@ -360,5 +382,13 @@ async function downgradeSelected() {
 .link-buttons {
   justify-content: center;
   flex-wrap: nowrap;
+}
+
+.inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
 }
 </style>

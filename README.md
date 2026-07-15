@@ -94,9 +94,10 @@ The frontend also installs the shared Emberline design system directly from GitH
 2. Under **Plex Libraries** in Settings, select the libraries to scan and set a minimum resolution threshold per library (default: **1080p**).
 3. Navigate to **Video Quality Check** and click **Run Check**.
 4. Movies below their library's threshold are listed separately from movies above it, showing resolution, codec, and audio details for each.
-5. Select movies in the **Below Threshold** list and click **Upgrade** to delete the current file in Radarr and queue a replacement search.
-6. Select movies in the **Above Threshold** list and click **Downgrade** to delete the current file in Radarr and queue a replacement search for a smaller file.
-7. Radarr still decides the replacement based on that movie's current quality profile, so a downgrade will only happen if the Radarr profile allows a lower-quality result.
+5. Optional: enable **Deep scan** to fetch per-movie Plex metadata for more accurate media details. This is slower, especially on large libraries.
+6. Select movies in the **Below Threshold** list and click **Upgrade** to delete the current file in Radarr and queue a replacement search.
+7. Select movies in the **Above Threshold** list and click **Downgrade** to delete the current file in Radarr and queue a replacement search for a smaller file.
+8. Radarr still decides the replacement based on that movie's current quality profile, so a downgrade will only happen if the Radarr profile allows a lower-quality result.
 
 ## Unmanaged Movies
 
