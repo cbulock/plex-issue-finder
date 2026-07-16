@@ -174,3 +174,14 @@ test('runFfmpegDeepScan redacts Plex tokens from stderr-derived error messages',
     }
   );
 });
+
+test('toSafeDeepScanMessage redacts common Plex token parameter names', () => {
+  const message = __test.toSafeDeepScanMessage(
+    'ffmpeg failed for http://plex.local/file.mkv?X-Plex-Token=secret&plexToken=other&token=third'
+  );
+
+  assert.match(message, /X-Plex-Token=\[REDACTED\]/);
+  assert.match(message, /plexToken=\[REDACTED\]/);
+  assert.match(message, /token=\[REDACTED\]/);
+  assert.doesNotMatch(message, /secret|other|third/);
+});

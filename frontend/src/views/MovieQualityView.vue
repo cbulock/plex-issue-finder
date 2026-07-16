@@ -13,7 +13,7 @@
             id="movie-quality-deep-scan"
             :model-value="deepScan"
             :disabled="loading"
-            @update:model-value="deepScan = !!$event; deepScanHydrated = true"
+            @update:model-value="deepScan = !!$event"
           />
           <span>Deep scan</span>
         </label>
@@ -232,7 +232,6 @@ const selectedDowngradeMovies = ref([])
 const redownloading = ref(false)
 const downgrading = ref(false)
 const deepScan = ref(false)
-const deepScanHydrated = ref(false)
 
 const flaggedColumns = [
   { key: 'title', label: 'Title', sortable: true, minWidth: '12rem', priority: 1 },
@@ -258,10 +257,10 @@ const lastRunLabel = computed(() => {
 })
 
 onMounted(async () => {
+  const initialDeepScan = deepScan.value
   await settingsStore.fetchSettings()
-  if (!deepScanHydrated.value) {
+  if (deepScan.value === initialDeepScan) {
     deepScan.value = settingsStore.settings.plex_deep_scan === '1'
-    deepScanHydrated.value = true
   }
 })
 

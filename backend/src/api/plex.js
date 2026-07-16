@@ -122,6 +122,14 @@ function redactSensitiveUrlParams(text) {
   return redacted;
 }
 
+function toSafeDeepScanMessage(err) {
+  if (err instanceof Error) {
+    return redactSensitiveUrlParams(err.message);
+  }
+
+  return redactSensitiveUrlParams(err);
+}
+
 function formatDeepScanTimeout(timeoutMs) {
   if (timeoutMs < 1000) {
     return `${timeoutMs}ms`;
@@ -255,7 +263,7 @@ async function runFfmpegDeepScan(streamUrl, options = {}) {
 
     proc.on('error', (err) => {
       clearTimers();
-      reject(err);
+      reject(new Error(toSafeDeepScanMessage(err)));
     });
 
     proc.stderr.on('data', (chunk) => {
@@ -350,7 +358,9 @@ async function deepScanPlexVideoItems(items, context, options = {}) {
       return result.item;
     } catch (err) {
       stats.fallbacks += 1;
-      console.warn(`[Plex] Deep scan fallback for "${item.title || item.grandparentTitle || item.ratingKey}" (${item.ratingKey}): ${err.message}`);
+      console.warn(
+        `[Plex] Deep scan fallback for "${item.title || item.grandparentTitle || item.ratingKey}" (${item.ratingKey}): ${toSafeDeepScanMessage(err)}`
+      );
       return item;
     }
   });
@@ -589,6 +599,7 @@ module.exports = {
     mergeDeepScannedMedia,
     parseFfmpegStreamMetadata,
     redactSensitiveUrlParams,
+    toSafeDeepScanMessage,
     formatDeepScanTimeout,
     resolveDeepScanSourceItem,
     runFfmpegDeepScan,
