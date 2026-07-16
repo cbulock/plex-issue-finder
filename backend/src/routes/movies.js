@@ -3,6 +3,7 @@ const router = express.Router();
 const { fetchPlexMovies } = require('../api/plex');
 const { fetchRadarrMovies } = require('../api/radarr');
 const {
+  DEEP_SCAN_SETTING_KEY,
   getSetting,
   getCachedRuntime,
   upsertCachedRuntime,
@@ -32,6 +33,14 @@ function validateConfig(config) {
   return missing;
 }
 
+function parseBoolean(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
+}
+
 // Normalize a title for fuzzy matching (lowercase, strip punctuation/articles)
 function normalizeTitle(title) {
   return (title || '')
@@ -51,11 +60,20 @@ router.get('/check', async (req, res) => {
   }
 
   const forceRefresh = req.query.force === 'true';
+  const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
+  const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
   console.log(`\n[Check] Starting duration check (forceRefresh=${forceRefresh})`);
+  console.log('[Check] Deep scan:', deepScan);
 
   try {
     // --- Step 1: Fetch Plex movies ---
-    const { movies: plexMovies, machineIdentifier } = await fetchPlexMovies(config.plexUrl, config.plexToken, config.selectedLibraryIds);
+    const {
+      movies: plexMovies,
+      machineIdentifier,
+      deepScanFallbacks,
+      deepScanMetadataLookups,
+      deepScanScanned,
+    } = await fetchPlexMovies(config.plexUrl, config.plexToken, config.selectedLibraryIds, { deepScan });
     const plexWithTmdb = plexMovies.filter((m) => m.tmdbId).length;
     console.log(`[Check] Plex: ${plexMovies.length} total, ${plexWithTmdb} have TMDB IDs, ${plexMovies.length - plexWithTmdb} missing TMDB IDs`);
 
@@ -204,6 +222,11 @@ router.get('/check', async (req, res) => {
         plexUrl: config.plexUrl,
         radarrUrl: config.radarrUrl,
         plexMachineId: machineIdentifier,
+        deepScan,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+        deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
       },
       flagged,
       noMatch,
@@ -283,4 +306,3 @@ router.get('/cache-stats', (req, res) => {
 });
 
 module.exports = router;
-
