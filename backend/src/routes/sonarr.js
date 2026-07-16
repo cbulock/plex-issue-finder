@@ -24,6 +24,10 @@ function validateSonarrConfig(config) {
   return missing;
 }
 
+function compareSeriesTitles(a, b) {
+  return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+}
+
 /**
  * Process an array of items with limited concurrency.
  * Returns an array of results in the same order as the input.
@@ -172,6 +176,43 @@ router.get('/check', async (req, res) => {
     });
   } catch (err) {
     console.error('[Sonarr] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/sonarr/series — lightweight series list for selectors
+router.get('/series', async (req, res) => {
+  const config = getSonarrConfig();
+  const missing = validateSonarrConfig(config);
+  if (missing.length > 0) {
+    return res.status(400).json({
+      error: `Missing configuration: ${missing.join(', ')}. Please configure Sonarr in Settings.`,
+    });
+  }
+
+  try {
+    const allSeries = await fetchSonarrSeries(config.sonarrUrl, config.sonarrApiKey);
+    const series = allSeries
+      .filter((entry) => entry.tvdbId)
+      .map((entry) => ({
+        id: entry.id,
+        title: entry.title,
+        year: entry.year || null,
+        titleSlug: entry.titleSlug || '',
+        monitored: Boolean(entry.monitored),
+        tvdbId: entry.tvdbId,
+      }))
+      .sort(compareSeriesTitles);
+
+    res.json({
+      summary: {
+        totalSeries: series.length,
+        sonarrUrl: config.sonarrUrl,
+      },
+      series,
+    });
+  } catch (err) {
+    console.error('[Sonarr] Failed to fetch series list:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

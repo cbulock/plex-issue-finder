@@ -53,6 +53,9 @@ export const useEpisodeDurationStore = defineStore('episodeDuration', () => {
       if (options.deepScan !== undefined) {
         params.set('deep', options.deepScan ? '1' : '0')
       }
+      if (options.seriesId != null && options.seriesId !== '') {
+        params.set('seriesId', String(options.seriesId))
+      }
 
       const path = params.size > 0 ? `/api/episode-duration/check?${params.toString()}` : '/api/episode-duration/check'
       const data = await apiGet(path)
