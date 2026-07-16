@@ -8,6 +8,15 @@
         </p>
       </div>
       <div class="header-actions">
+        <CindorSelect v-model="selectedSeriesId" :disabled="loading || seriesLoading" class="show-select">
+          <CindorOption label="All shows" value="" />
+          <CindorOption
+            v-for="series in seriesOptions"
+            :key="series.id"
+            :label="seriesLabel(series)"
+            :value="String(series.id)"
+          />
+        </CindorSelect>
         <label class="inline-toggle" for="episode-duration-deep-scan">
           <CindorCheckbox
             id="episode-duration-deep-scan"
@@ -17,7 +26,7 @@
           />
           <span>Deep scan</span>
         </label>
-        <CindorButton type="button" :disabled="loading" @click="store.runCheck({ deepScan })">
+        <CindorButton type="button" :disabled="loading" @click="runCheck">
           <span class="button-content">
             <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
@@ -30,11 +39,19 @@
       {{ error }}
     </CindorAlert>
 
+    <CindorAlert v-if="seriesError" tone="neutral" class="page-alert">
+      {{ seriesError }}
+    </CindorAlert>
+
     <CindorAlert v-if="result?.summary?.deepScan" tone="neutral" class="page-alert">
       Deep scan ran a full `ffmpeg` decode pass for each episode in this run.
       <span v-if="result.summary.deepScanScanned || result.summary.deepScanMetadataLookups || result.summary.deepScanFallbacks">
         {{ result.summary.deepScanScanned || 0 }} decode(s), {{ result.summary.deepScanMetadataLookups || 0 }} metadata lookup(s), {{ result.summary.deepScanFallbacks || 0 }} fallback(s).
       </span>
+    </CindorAlert>
+
+    <CindorAlert v-if="result?.summary?.selectedSeries" tone="neutral" class="page-alert">
+      Scan scope: {{ seriesLabel(result.summary.selectedSeries) }}
     </CindorAlert>
 
     <div v-if="result" class="summary-row">
@@ -182,8 +199,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useEpisodeDurationStore } from '../stores/episodeDuration'
 import { useSettingsStore } from '../stores/settings'
 import { useAppToast } from '../composables/useAppToast'
-import { apiPost } from '../api/client'
-import { CindorAlert, CindorButton, CindorCheckbox, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import { apiGet, apiPost } from '../api/client'
+import { CindorAlert, CindorButton, CindorCheckbox, CindorOption, CindorSelect, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
 import AppDataTable from '../components/AppDataTable.vue'
 import AppExternalLink from '../components/AppExternalLink.vue'
 import AppIcon from '../components/AppIcon.vue'
@@ -204,6 +221,10 @@ const sonarrBaseUrl = computed(() => store.result?.summary?.sonarrUrl || '')
 const selectedEpisodes = ref([])
 const redownloading = ref(false)
 const deepScan = ref(false)
+const selectedSeriesId = ref('')
+const seriesOptions = ref([])
+const seriesLoading = ref(false)
+const seriesError = ref(null)
 
 const flaggedColumns = [
   { key: 'showTitle', label: 'Show', sortable: true },
@@ -251,6 +272,26 @@ async function redownload() {
   }
 }
 
+async function loadSeriesOptions() {
+  seriesLoading.value = true
+  seriesError.value = null
+  try {
+    const data = await apiGet('/api/sonarr/series')
+    seriesOptions.value = Array.isArray(data.series) ? data.series : []
+  } catch (err) {
+    seriesError.value = `Could not load Sonarr shows: ${err.message}`
+  } finally {
+    seriesLoading.value = false
+  }
+}
+
+function runCheck() {
+  return store.runCheck({
+    deepScan: deepScan.value,
+    seriesId: selectedSeriesId.value ? Number.parseInt(selectedSeriesId.value, 10) : null,
+  })
+}
+
 const lastRunLabel = computed(() => {
   if (!store.lastRun) return null
   const now = new Date()
@@ -266,7 +307,7 @@ const lastRunLabel = computed(() => {
 
 onMounted(async () => {
   const initialDeepScan = deepScan.value
-  await settingsStore.fetchSettings()
+  await Promise.all([settingsStore.fetchSettings(), loadSeriesOptions()])
   if (deepScan.value === initialDeepScan) {
     deepScan.value = settingsStore.settings.plex_deep_scan === '1'
   }
@@ -277,6 +318,10 @@ function formatMinutes(min) {
   const h = Math.floor(min / 60)
   const m = min % 60
   return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+function seriesLabel(series) {
+  return series.year ? `${series.title} (${series.year})` : series.title
 }
 
 function plexLink(ratingKey) {
@@ -311,5 +356,9 @@ function plexLink(ratingKey) {
   gap: var(--space-2);
   color: var(--fg-muted);
   font-size: var(--text-sm);
+}
+
+.show-select {
+  min-width: 15rem;
 }
 </style>

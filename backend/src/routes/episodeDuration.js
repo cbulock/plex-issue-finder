@@ -37,6 +37,12 @@ function parseBoolean(value) {
   return null;
 }
 
+function parseOptionalInteger(value) {
+  if (value == null || value === '') return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) ? parsed : Number.NaN;
+}
+
 async function mapWithConcurrency(items, fn, limit) {
   const results = new Array(items.length);
   let nextIndex = 0;
@@ -68,6 +74,11 @@ router.get('/check', async (req, res) => {
   try {
     const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
     const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
+    const requestedSeriesId = parseOptionalInteger(req.query.seriesId);
+
+    if (Number.isNaN(requestedSeriesId)) {
+      return res.status(400).json({ error: 'seriesId must be an integer when provided.' });
+    }
 
     // --- Step 1: Fetch Plex TV episodes ---
     let plexEpisodes, machineIdentifier, deepScanFallbacks, deepScanMetadataLookups, deepScanScanned;
@@ -119,6 +130,17 @@ router.get('/check', async (req, res) => {
 
     console.log(`[EpisodeDuration] Sonarr: ${allSonarrSeries.length} series, ${sonarrSeriesMap.size} with TVDB IDs`);
 
+    let selectedSeries = null;
+    if (requestedSeriesId != null) {
+      selectedSeries = allSonarrSeries.find((series) => series.id === requestedSeriesId) || null;
+      if (!selectedSeries) {
+        return res.status(404).json({ error: `Sonarr series ${requestedSeriesId} was not found.` });
+      }
+      if (!selectedSeries.tvdbId) {
+        return res.status(400).json({ error: `Sonarr series "${selectedSeries.title}" does not have a TVDB ID, so Plex episodes cannot be matched.` });
+      }
+    }
+
     // --- Step 3: Compare durations ---
     const flagged = [];
     const ok = [];
@@ -127,6 +149,7 @@ router.get('/check', async (req, res) => {
     for (const ep of plexEpisodes) {
       // Only process episodes from Sonarr-managed shows (matched by TVDB ID)
       if (!ep.tvdbId) continue;
+      if (selectedSeries && ep.tvdbId !== selectedSeries.tvdbId) continue;
 
       const sonarr = sonarrSeriesMap.get(ep.tvdbId);
       if (!sonarr) continue; // Show not in Sonarr — skip silently
@@ -205,6 +228,15 @@ router.get('/check', async (req, res) => {
         deepScanMetadataLookups,
         deepScanScanned,
         deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
+        selectedSeries: selectedSeries
+          ? {
+              id: selectedSeries.id,
+              title: selectedSeries.title,
+              year: selectedSeries.year || null,
+              titleSlug: selectedSeries.titleSlug || '',
+              tvdbId: selectedSeries.tvdbId,
+            }
+          : null,
       },
       flagged,
       noMatch,

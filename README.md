@@ -119,7 +119,7 @@ The frontend also installs the shared Emberline design system directly from GitH
 
 1. Configure Plex and Sonarr URLs + credentials in **Settings**.
 2. Set your preferred leeway percentage (default: **5%**) and episode minimum difference (default: **3 min**) under **Duration Tolerance** in Settings.
-3. Navigate to **Episode Duration Check** and click **Run Check**.
+3. Navigate to **Episode Duration Check**, optionally choose a single show, and click **Run Check**.
 4. Optional: enable **Deep scan** to run a full `ffmpeg` decode pass per episode before comparing durations. Plex metadata is used only as a fallback to locate a media part when needed.
 5. Only episodes from shows managed by Sonarr (matched by TVDB ID) are compared. Episodes are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
 6. Select flagged episodes and click **Redownload** to delete the existing file in Sonarr and trigger a new automatic episode search.
