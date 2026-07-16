@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { fetchPlexMovies } = require('../api/plex');
 const { fetchRadarrMovies } = require('../api/radarr');
-const { getSetting } = require('../db');
+const { DEEP_SCAN_SETTING_KEY, getSetting } = require('../db');
 
 const RESOLUTION_RANK = { '480p': 1, '720p': 2, '1080p': 3, '4k': 4 };
 
@@ -14,6 +14,14 @@ function parseResolution(raw) {
   if (r === '720') return { label: '720p', rank: 2 };
   if (r === '480') return { label: '480p', rank: 1 };
   return { label: raw, rank: 0 };
+}
+
+function parseBoolean(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
 }
 
 // GET /api/quality/check
@@ -37,12 +45,16 @@ router.get('/check', async (req, res) => {
     thresholds = {};
   }
 
+  const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
+  const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
+
   console.log('\n[Quality] Starting quality check');
   console.log('[Quality] Thresholds by section:', thresholds);
+  console.log('[Quality] Deep scan:', deepScan);
 
   try {
-    const [{ movies, machineIdentifier }, radarrMap] = await Promise.all([
-      fetchPlexMovies(plexUrl, plexToken, selectedLibraryIds),
+    const [{ movies, machineIdentifier, deepScanFallbacks, deepScanMetadataLookups, deepScanScanned }, radarrMap] = await Promise.all([
+      fetchPlexMovies(plexUrl, plexToken, selectedLibraryIds, { deepScan }),
       radarrUrl && radarrApiKey ? fetchRadarrMovies(radarrUrl, radarrApiKey) : Promise.resolve(new Map()),
     ]);
     console.log(`[Quality] Fetched ${movies.length} movies from Plex, ${radarrMap.size} from Radarr`);
@@ -95,6 +107,11 @@ router.get('/check', async (req, res) => {
         plexUrl,
         plexMachineId: machineIdentifier,
         radarrUrl: radarrUrl || '',
+        deepScan,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+        deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
       },
       flagged,
       overThreshold,

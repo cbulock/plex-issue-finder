@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getAllSettings, setSetting } = require('../db');
+const { DEEP_SCAN_SETTING_KEY, getAllSettings, setSetting } = require('../db');
 
-const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'sonarr_url', 'sonarr_api_key', 'leeway_percent', 'movie_min_diff_min', 'episode_min_diff_min', 'plex_library_ids', 'quality_thresholds'];
+const ALLOWED_KEYS = ['plex_url', 'plex_token', 'radarr_url', 'radarr_api_key', 'sonarr_url', 'sonarr_api_key', 'leeway_percent', 'movie_min_diff_min', 'episode_min_diff_min', 'plex_library_ids', 'quality_thresholds', DEEP_SCAN_SETTING_KEY, 'quality_deep_scan'];
 
 // GET /api/settings
 router.get('/', (req, res) => {
@@ -20,6 +20,7 @@ router.get('/', (req, res) => {
     episode_min_diff_min: settings.episode_min_diff_min || '3',
     plex_library_ids: settings.plex_library_ids || '',
     quality_thresholds: settings.quality_thresholds || '{}',
+    plex_deep_scan: settings[DEEP_SCAN_SETTING_KEY] || settings.quality_deep_scan || '0',
     plex_token_set: !!settings.plex_token,
     radarr_api_key_set: !!settings.radarr_api_key,
     sonarr_api_key_set: !!settings.sonarr_api_key,
@@ -54,7 +55,12 @@ router.post('/', (req, res) => {
         }
       }
 
-      setSetting(key, value);
+      if ((key === DEEP_SCAN_SETTING_KEY || key === 'quality_deep_scan') && value !== '0' && value !== '1') {
+        errors.push('plex_deep_scan must be 0 or 1');
+        continue;
+      }
+
+      setSetting(key === 'quality_deep_scan' ? DEEP_SCAN_SETTING_KEY : key, value);
     }
   }
 

@@ -3,7 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 const { fetchPlexTvEpisodes } = require('../api/plex');
 const { fetchSonarrSeries } = require('../api/sonarr');
-const { getSetting } = require('../db');
+const { DEEP_SCAN_SETTING_KEY, getSetting } = require('../db');
 
 const CONCURRENCY_LIMIT = 5;
 
@@ -27,6 +27,14 @@ function validateConfig(config) {
   if (!config.sonarrUrl) missing.push('sonarr_url');
   if (!config.sonarrApiKey) missing.push('sonarr_api_key');
   return missing;
+}
+
+function parseBoolean(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
 }
 
 async function mapWithConcurrency(items, fn, limit) {
@@ -58,13 +66,23 @@ router.get('/check', async (req, res) => {
   console.log('\n[EpisodeDuration] Starting episode duration check');
 
   try {
+    const deepScanSetting = parseBoolean(getSetting(DEEP_SCAN_SETTING_KEY)) || false;
+    const deepScan = parseBoolean(req.query.deep) ?? deepScanSetting;
+
     // --- Step 1: Fetch Plex TV episodes ---
-    let plexEpisodes, machineIdentifier;
+    let plexEpisodes, machineIdentifier, deepScanFallbacks, deepScanMetadataLookups, deepScanScanned;
     try {
-      ({ episodes: plexEpisodes, machineIdentifier } = await fetchPlexTvEpisodes(
+      ({
+        episodes: plexEpisodes,
+        machineIdentifier,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+      } = await fetchPlexTvEpisodes(
         config.plexUrl,
         config.plexToken,
-        config.selectedLibraryIds
+        config.selectedLibraryIds,
+        { deepScan }
       ));
     } catch (plexErr) {
       console.error('[EpisodeDuration] Plex fetch FAILED:', plexErr.message);
@@ -182,6 +200,11 @@ router.get('/check', async (req, res) => {
         plexUrl: config.plexUrl,
         sonarrUrl: config.sonarrUrl,
         plexMachineId: machineIdentifier,
+        deepScan,
+        deepScanFallbacks,
+        deepScanMetadataLookups,
+        deepScanScanned,
+        deepScanMode: deepScan ? 'ffmpeg_full_decode' : 'library_metadata',
       },
       flagged,
       noMatch,
