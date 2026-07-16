@@ -8,7 +8,16 @@
         </p>
       </div>
       <div class="header-actions">
-        <CindorButton type="button" :disabled="loading" @click="store.runCheck(false)">
+        <label class="inline-toggle" for="movie-duration-deep-scan">
+          <CindorCheckbox
+            id="movie-duration-deep-scan"
+            :model-value="deepScan"
+            :disabled="loading"
+            @update:model-value="deepScan = !!$event"
+          />
+          <span>Deep scan</span>
+        </label>
+        <CindorButton type="button" :disabled="loading" @click="store.runCheck({ deepScan })">
           <span class="button-content">
             <AppIcon :name="loading ? 'loader-pinwheel' : 'play'" :size="16" />
             <span>{{ loading ? 'Running…' : 'Run Check' }}</span>
@@ -19,7 +28,7 @@
           variant="ghost"
           :disabled="loading"
           title="Clears the Radarr runtime cache and re-fetches all runtimes"
-          @click="store.runCheck(true)"
+          @click="store.runCheck({ force: true, deepScan })"
         >
           <span class="button-content">
             <AppIcon name="refresh-cw" :size="16" />
@@ -31,6 +40,13 @@
 
     <CindorAlert v-if="error" tone="danger" class="page-alert">
       {{ error }}
+    </CindorAlert>
+
+    <CindorAlert v-if="result?.summary?.deepScan" tone="neutral" class="page-alert">
+      Deep scan ran a full `ffmpeg` decode pass for each movie in this run.
+      <span v-if="result.summary.deepScanScanned || result.summary.deepScanMetadataLookups || result.summary.deepScanFallbacks">
+        {{ result.summary.deepScanScanned || 0 }} decode(s), {{ result.summary.deepScanMetadataLookups || 0 }} metadata lookup(s), {{ result.summary.deepScanFallbacks || 0 }} fallback(s).
+      </span>
     </CindorAlert>
 
     <div v-if="result" class="summary-row">
@@ -158,22 +174,24 @@
 
     <div v-if="loading" class="loading-state">
       <CindorSpinner />
-      <p>Fetching movie data from Plex and Radarr...</p>
+      <p>{{ deepScan ? 'Running ffmpeg deep scan on Plex movies...' : 'Fetching movie data from Plex and Radarr...' }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMovieDurationStore } from '../stores/movieDuration'
+import { useSettingsStore } from '../stores/settings'
 import { useAppToast } from '../composables/useAppToast'
-import { CindorAlert, CindorButton, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
+import { CindorAlert, CindorButton, CindorCheckbox, CindorSpinner, CindorStatCard } from 'cindor-ui-vue'
 import AppDataTable from '../components/AppDataTable.vue'
 import AppExternalLink from '../components/AppExternalLink.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppTag from '../components/AppTag.vue'
 
 const store = useMovieDurationStore()
+const settingsStore = useSettingsStore()
 const toast = useAppToast()
 
 const result = computed(() => store.result)
@@ -187,6 +205,7 @@ const radarrBaseUrl = computed(() => store.result?.summary?.radarrUrl || '')
 
 const selectedMovies = ref([])
 const redownloading = ref(false)
+const deepScan = ref(false)
 
 const flaggedColumns = [
   { key: 'title', label: 'Title', sortable: true },
@@ -231,6 +250,14 @@ async function redownload() {
     redownloading.value = false
   }
 }
+
+onMounted(async () => {
+  const initialDeepScan = deepScan.value
+  await settingsStore.fetchSettings()
+  if (deepScan.value === initialDeepScan) {
+    deepScan.value = settingsStore.settings.plex_deep_scan === '1'
+  }
+})
 
 const lastRunLabel = computed(() => {
   if (!store.lastRun) return null

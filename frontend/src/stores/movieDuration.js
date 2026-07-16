@@ -45,11 +45,22 @@ export const useMovieDurationStore = defineStore('movieDuration', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  async function runCheck(force = false) {
+  async function runCheck(options = {}) {
     loading.value = true
     error.value = null
     try {
-      const data = await apiGet(`/api/movies/check${force ? '?force=true' : ''}`)
+      const normalized = typeof options === 'boolean' ? { force: options } : options
+      const params = new URLSearchParams()
+
+      if (normalized.force) {
+        params.set('force', 'true')
+      }
+      if (normalized.deepScan !== undefined) {
+        params.set('deep', normalized.deepScan ? '1' : '0')
+      }
+
+      const path = params.size > 0 ? `/api/movies/check?${params.toString()}` : '/api/movies/check'
+      const data = await apiGet(path)
       // markRaw prevents Vue from making the large result arrays deeply reactive,
       // which keeps the table views from doing unnecessary work on large result sets.
       result.value = markRaw(data)

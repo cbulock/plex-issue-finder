@@ -84,9 +84,10 @@ The frontend also installs the shared Emberline design system directly from GitH
 2. Optionally select which Plex libraries to scan under **Plex Libraries** in Settings.
 3. Set your preferred leeway percentage (default: **5%**) and movie minimum difference (default: **5 min**).
 4. Navigate to **Movie Duration Check** and click **Run Check**.
-5. Movies are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
-6. Radarr runtimes are cached in SQLite. Use **Force Refresh Cache** to re-fetch.
-7. Select flagged movies and click **Redownload** to delete the existing file in Radarr and trigger a new automatic search.
+5. Optional: enable **Deep scan** to run a full `ffmpeg` decode pass per movie before comparing durations. Plex metadata is used only as a fallback to locate a media part when needed.
+6. Movies are flagged only when the runtime difference is greater than both the percentage threshold and the minimum difference, i.e. `|actual - expected| > max(expected * leeway%, min_diff_minutes)`.
+7. Radarr runtimes are cached in SQLite. Use **Force Refresh Cache** to re-fetch.
+8. Select flagged movies and click **Redownload** to delete the existing file in Radarr and trigger a new automatic search.
 
 ## Video Quality Check
 
